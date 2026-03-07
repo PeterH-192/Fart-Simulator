@@ -785,12 +785,21 @@
     <!-- Load API key from config.js (not tracked by git) -->
     <script src="config.js"></script>
     <script>
-        // Load Google Maps with key from config.js
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=geometry&callback=initMap`;
-        script.async = true;
-        script.defer = true;
-        document.head.appendChild(script);
+        // Load Google Maps with key from config
+        (function() {
+            if (typeof GOOGLE_MAPS_API_KEY === 'undefined' || GOOGLE_MAPS_API_KEY === 'YOUR_API_KEY_HERE') {
+                document.getElementById('map').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#e94560;font-size:1.2em;padding:40px;text-align:center;">Copy config.example.js to config.js and add your Google Maps API key.</div>';
+                return;
+            }
+            var s = document.createElement('script');
+            s.src = 'https://maps.googleapis.com/maps/api/js?key=' + GOOGLE_MAPS_API_KEY + '&libraries=geometry&callback=initMap';
+            s.async = true;
+            s.defer = true;
+            s.onerror = function() {
+                document.getElementById('map').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#e94560;font-size:1.2em;padding:40px;text-align:center;">Failed to load Google Maps. Check your API key in config.js and ensure the Maps JavaScript API is enabled.</div>';
+            };
+            document.body.appendChild(s);
+        })();
     </script>
 </body>
 </html>
