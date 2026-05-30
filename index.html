@@ -11,9 +11,18 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --accent: #e94560;
+            --accent2: #ffb142;
+            --green: #2ecc71;
+            --bg-dark: #0d1126;
+            --bg-panel1: #16213e;
+            --bg-panel2: #0f3460;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #1a1a2e;
+            background: var(--bg-dark);
             color: #eee;
             overflow: hidden;
             height: 100vh;
@@ -24,55 +33,162 @@
             height: 100vh;
         }
 
-        /* Control Panel */
+        /* ============ CONTROL PANEL ============ */
         #controls {
-            width: 320px;
-            background: linear-gradient(180deg, #16213e, #0f3460);
-            padding: 20px;
+            width: 340px;
+            background: linear-gradient(180deg, var(--bg-panel1), var(--bg-panel2));
+            padding: 18px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
             overflow-y: auto;
-            border-right: 3px solid #e94560;
+            border-right: 3px solid var(--accent);
             z-index: 10;
+            position: relative;
+        }
+
+        #controls::-webkit-scrollbar { width: 8px; }
+        #controls::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+
+        /* Animated title */
+        #title-wrap {
+            text-align: center;
+            position: relative;
         }
 
         #controls h1 {
-            font-size: 1.6em;
-            text-align: center;
-            color: #e94560;
-            text-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
-            margin-bottom: 4px;
+            font-size: 1.7em;
+            color: var(--accent);
+            text-shadow: 0 0 20px rgba(233, 69, 96, 0.6);
+            letter-spacing: 1px;
         }
 
         #controls h1 .emoji {
-            font-size: 1.2em;
+            display: inline-block;
+            font-size: 1.1em;
+            animation: wobble 1.6s ease-in-out infinite;
+        }
+
+        @keyframes wobble {
+            0%, 100% { transform: rotate(-8deg) scale(1); }
+            50% { transform: rotate(8deg) scale(1.15); }
         }
 
         .subtitle {
             text-align: center;
-            font-size: 0.8em;
+            font-size: 0.78em;
             color: #aaa;
-            margin-bottom: 8px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
 
+        /* ============ CHARACTER STAGE ============ */
+        #character-stage {
+            background: radial-gradient(circle at 50% 40%, #1f2b4d, #0a0f24);
+            border-radius: 14px;
+            padding: 10px;
+            position: relative;
+            height: 150px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        #character-svg {
+            position: absolute;
+            left: 50%;
+            bottom: 6px;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 130px;
+        }
+
+        /* Character idle bob */
+        #char-body {
+            transform-box: fill-box;
+            transform-origin: center bottom;
+            animation: bob 2.4s ease-in-out infinite;
+        }
+
+        @keyframes bob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        .cheek {
+            transform-box: fill-box;
+            transform-origin: center;
+            transition: transform 0.3s;
+        }
+
+        /* Charge state - body tenses */
+        #character-stage.charging #char-body {
+            animation: tense 0.25s ease-in-out infinite;
+        }
+
+        @keyframes tense {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(1px) scale(1.04, 0.97); }
+        }
+
+        #charge-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 14px;
+            pointer-events: none;
+            box-shadow: inset 0 0 0 0 var(--accent2);
+            transition: box-shadow 0.1s;
+        }
+
+        /* Power label floating over character */
+        #power-float {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7em;
+            color: var(--accent2);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.85;
+        }
+
+        /* ============ CONTROL GROUPS ============ */
         .control-group {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 12px;
-            padding: 14px;
+            padding: 12px 14px;
+            border: 1px solid rgba(255,255,255,0.04);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .control-group:hover {
+            border-color: rgba(233, 69, 96, 0.4);
+            box-shadow: 0 0 16px rgba(233, 69, 96, 0.12);
         }
 
         .control-group label {
-            display: block;
-            font-size: 0.85em;
-            color: #ccc;
-            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.82em;
+            color: #cfcfe0;
+            margin-bottom: 8px;
         }
 
-        .control-group .value-display {
-            float: right;
-            color: #e94560;
+        .control-group .label-icon {
+            margin-right: 5px;
+        }
+
+        .value-display {
+            color: var(--accent2);
             font-weight: bold;
+            font-size: 1.05em;
+            background: rgba(0,0,0,0.3);
+            padding: 1px 8px;
+            border-radius: 6px;
+            min-width: 52px;
+            text-align: right;
         }
 
         input[type="range"] {
@@ -80,8 +196,9 @@
             -webkit-appearance: none;
             height: 8px;
             border-radius: 4px;
-            background: #1a1a2e;
+            background: #0a0f24;
             outline: none;
+            cursor: pointer;
         }
 
         input[type="range"]::-webkit-slider-thumb {
@@ -89,298 +206,601 @@
             width: 22px;
             height: 22px;
             border-radius: 50%;
-            background: #e94560;
+            background: radial-gradient(circle at 35% 35%, #ff7a8c, var(--accent));
             cursor: pointer;
-            box-shadow: 0 0 10px rgba(233, 69, 96, 0.6);
+            box-shadow: 0 0 12px rgba(233, 69, 96, 0.7);
+            transition: transform 0.1s;
         }
 
-        .info-box {
-            background: rgba(233, 69, 96, 0.1);
-            border: 1px solid rgba(233, 69, 96, 0.3);
-            border-radius: 8px;
-            padding: 10px;
-            font-size: 0.8em;
-            line-height: 1.4;
+        input[type="range"]::-webkit-slider-thumb:active {
+            transform: scale(1.25);
         }
 
-        .info-box .stat {
+        input[type="range"]::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border: none;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #ff7a8c, var(--accent));
+            cursor: pointer;
+            box-shadow: 0 0 12px rgba(233, 69, 96, 0.7);
+        }
+
+        /* Animated meter bars */
+        .meter {
+            height: 8px;
+            background: #0a0f24;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+            position: relative;
+        }
+
+        .meter-fill {
+            height: 100%;
+            border-radius: 4px;
+            width: 10%;
+            transition: width 0.25s cubic-bezier(.34,1.56,.64,1);
+            background: linear-gradient(90deg, #27ae60, #f1c40f, #e67e22, #e74c3c, #8e44ad);
+            background-size: 300% 100%;
+            position: relative;
+        }
+
+        .meter-fill::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shimmer 1.8s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Diet selector pills */
+        #diet-pills {
             display: flex;
-            justify-content: space-between;
-            margin: 2px 0;
+            gap: 4px;
+            margin-top: 4px;
         }
 
-        .info-box .stat-value {
-            color: #e94560;
+        .diet-pill {
+            flex: 1;
+            text-align: center;
+            padding: 7px 2px;
+            border-radius: 8px;
+            font-size: 1.3em;
+            background: rgba(0,0,0,0.25);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            filter: grayscale(0.6);
+        }
+
+        .diet-pill:hover { transform: translateY(-2px); filter: grayscale(0); }
+
+        .diet-pill.active {
+            border-color: var(--accent2);
+            background: rgba(255, 177, 66, 0.18);
+            filter: grayscale(0);
+            transform: translateY(-2px);
+            box-shadow: 0 0 12px rgba(255, 177, 66, 0.4);
+        }
+
+        .diet-name {
+            text-align: center;
+            font-size: 0.82em;
+            color: var(--accent2);
+            margin-top: 6px;
             font-weight: bold;
         }
 
+        /* ============ STATS DASHBOARD ============ */
+        #stats-box {
+            background: rgba(233, 69, 96, 0.08);
+            border: 1px solid rgba(233, 69, 96, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 5px 0;
+            font-size: 0.82em;
+        }
+
+        .stat-value {
+            color: var(--accent2);
+            font-weight: bold;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stat-value.flash {
+            animation: statflash 0.4s;
+        }
+
+        @keyframes statflash {
+            0% { color: #fff; transform: scale(1.3); }
+            100% { color: var(--accent2); transform: scale(1); }
+        }
+
+        #destroy-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        /* ============ BUTTONS ============ */
         #fire-btn {
             width: 100%;
             padding: 16px;
-            font-size: 1.3em;
+            font-size: 1.25em;
             font-weight: bold;
             border: none;
             border-radius: 12px;
             cursor: pointer;
-            background: linear-gradient(135deg, #e94560, #c0392b);
+            background: linear-gradient(135deg, var(--accent), #c0392b);
             color: white;
             text-transform: uppercase;
             letter-spacing: 2px;
-            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
             box-shadow: 0 4px 20px rgba(233, 69, 96, 0.4);
+            user-select: none;
         }
 
-        #fire-btn:hover {
-            transform: scale(1.03);
-            box-shadow: 0 6px 30px rgba(233, 69, 96, 0.6);
+        #fire-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 0; height: 0;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s, height 0.4s;
         }
 
-        #fire-btn:active {
-            transform: scale(0.97);
+        #fire-btn:hover { transform: scale(1.03); box-shadow: 0 6px 30px rgba(233, 69, 96, 0.6); }
+        #fire-btn:active::before { width: 300px; height: 300px; }
+
+        #fire-btn.charging {
+            background: linear-gradient(135deg, var(--accent2), var(--accent));
+            animation: btnpulse 0.4s ease-in-out infinite;
+        }
+
+        @keyframes btnpulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        #fire-hint {
+            text-align: center;
+            font-size: 0.7em;
+            color: #8a8aa0;
+            margin-top: -6px;
         }
 
         #reset-btn {
             width: 100%;
-            padding: 10px;
-            font-size: 0.9em;
-            border: 2px solid #e94560;
+            padding: 9px;
+            font-size: 0.85em;
+            border: 2px solid var(--accent);
             border-radius: 8px;
             cursor: pointer;
             background: transparent;
-            color: #e94560;
+            color: var(--accent);
             transition: all 0.2s;
         }
 
-        #reset-btn:hover {
-            background: rgba(233, 69, 96, 0.15);
-        }
+        #reset-btn:hover { background: rgba(233, 69, 96, 0.15); }
 
-        /* Map Area */
+        /* ============ MAP AREA ============ */
         #map-container {
             flex: 1;
             position: relative;
         }
 
-        #map {
-            width: 100%;
-            height: 100%;
-        }
+        #map { width: 100%; height: 100%; }
 
-        /* Blast overlay */
-        #blast-overlay {
+        #fx-canvas {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             pointer-events: none;
             z-index: 5;
         }
 
-        /* Status bar */
+        /* Status toast */
         #status-bar {
             position: absolute;
-            top: 10px;
+            top: 16px;
             left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: #e94560;
-            padding: 8px 20px;
-            border-radius: 20px;
+            transform: translateX(-50%) translateY(-80px);
+            background: rgba(13, 17, 38, 0.92);
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 24px;
             font-size: 0.9em;
-            font-weight: bold;
+            font-weight: 600;
             z-index: 6;
-            display: none;
-            border: 1px solid #e94560;
+            border: 1px solid var(--accent);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: transform 0.35s cubic-bezier(.34,1.56,.64,1), opacity 0.35s;
+            pointer-events: none;
         }
 
-        /* Damage report */
+        #status-bar.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Step tracker chips */
+        #step-tracker {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            z-index: 6;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .step-chip {
+            background: rgba(13, 17, 38, 0.85);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 0.8em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            opacity: 0.55;
+        }
+
+        .step-chip.active {
+            border-color: var(--accent2);
+            opacity: 1;
+            box-shadow: 0 0 14px rgba(255, 177, 66, 0.3);
+            transform: scale(1.04);
+        }
+
+        .step-chip.done {
+            border-color: var(--green);
+            opacity: 0.85;
+        }
+
+        .step-chip .dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: #555;
+        }
+        .step-chip.active .dot { background: var(--accent2); animation: blink 0.8s infinite; }
+        .step-chip.done .dot { background: var(--green); }
+
+        @keyframes blink { 50% { opacity: 0.3; } }
+
+        /* Damage report card */
         #damage-report {
             position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.9);
-            border: 2px solid #e94560;
-            border-radius: 12px;
-            padding: 16px 24px;
-            z-index: 6;
-            display: none;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.7);
+            background: linear-gradient(160deg, rgba(20,25,50,0.97), rgba(10,14,30,0.97));
+            border: 2px solid var(--accent);
+            border-radius: 18px;
+            padding: 24px 30px;
+            z-index: 8;
             text-align: center;
-            min-width: 300px;
+            min-width: 340px;
+            max-width: 440px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.6);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.4s cubic-bezier(.34,1.56,.64,1), opacity 0.4s;
         }
 
-        #damage-report h3 {
-            color: #e94560;
-            margin-bottom: 8px;
+        #damage-report.show {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            pointer-events: auto;
         }
+
+        #report-title {
+            font-size: 1.5em;
+            margin-bottom: 14px;
+            animation: titlepop 0.5s;
+        }
+
+        @keyframes titlepop {
+            0% { transform: scale(0); }
+            70% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* House destruction visual */
+        #house-viz {
+            height: 90px;
+            margin: 10px 0 16px;
+            position: relative;
+        }
+
+        #house-svg { height: 100%; }
+
+        #report-text {
+            font-size: 0.88em;
+            line-height: 1.7;
+            text-align: left;
+            background: rgba(0,0,0,0.25);
+            padding: 12px 16px;
+            border-radius: 10px;
+        }
+
+        #report-text b { color: var(--accent2); }
+
+        .report-bars {
+            margin-top: 8px;
+        }
+
+        .report-bar-track {
+            height: 14px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 7px;
+            overflow: hidden;
+            margin: 4px 0 10px;
+        }
+
+        .report-bar-fill {
+            height: 100%;
+            border-radius: 7px;
+            width: 0;
+            transition: width 1s cubic-bezier(.22,1,.36,1);
+        }
+
+        #close-report {
+            margin-top: 16px;
+            padding: 10px 30px;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.95em;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.15s;
+        }
+        #close-report:hover { transform: scale(1.05); }
 
         /* Instructions overlay */
         #instructions {
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.85);
-            border: 2px solid #e94560;
-            border-radius: 16px;
-            padding: 30px;
-            z-index: 7;
+            background: linear-gradient(160deg, rgba(20,25,50,0.97), rgba(10,14,30,0.97));
+            border: 2px solid var(--accent);
+            border-radius: 18px;
+            padding: 32px;
+            z-index: 9;
             text-align: center;
-            max-width: 450px;
+            max-width: 460px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.6);
         }
 
         #instructions h2 {
-            color: #e94560;
-            margin-bottom: 12px;
+            color: var(--accent);
+            margin-bottom: 6px;
+            font-size: 1.6em;
         }
-
-        #instructions p {
-            margin: 8px 0;
-            font-size: 0.9em;
-            color: #ccc;
-            line-height: 1.5;
+        #instructions .intro {
+            color: #aaa;
+            font-size: 0.85em;
+            margin-bottom: 16px;
         }
 
         #instructions .step {
-            background: rgba(233, 69, 96, 0.1);
-            border-radius: 8px;
-            padding: 8px 12px;
-            margin: 6px 0;
+            background: rgba(233, 69, 96, 0.08);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin: 8px 0;
             text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9em;
         }
-
-        #instructions .step-num {
-            color: #e94560;
+        #instructions .step .num {
+            background: var(--accent);
+            color: white;
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-weight: bold;
+            flex-shrink: 0;
         }
 
         #dismiss-instructions {
-            margin-top: 16px;
-            padding: 10px 30px;
-            background: #e94560;
+            margin-top: 18px;
+            padding: 12px 36px;
+            background: linear-gradient(135deg, var(--accent), #c0392b);
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             color: white;
-            font-size: 1em;
+            font-size: 1.05em;
+            font-weight: bold;
             cursor: pointer;
+            transition: transform 0.15s;
         }
+        #dismiss-instructions:hover { transform: scale(1.05); }
 
-        /* Player marker label */
         .marker-label {
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.75);
             color: white;
-            padding: 2px 6px;
-            border-radius: 4px;
+            padding: 2px 7px;
+            border-radius: 5px;
             font-size: 11px;
+            font-weight: bold;
             white-space: nowrap;
         }
 
-        /* Richter scale meter */
-        .richter-meter {
-            height: 10px;
-            background: #1a1a2e;
-            border-radius: 5px;
-            overflow: hidden;
-            margin-top: 6px;
-        }
-
-        .richter-fill {
+        /* Map loading / error message */
+        .map-msg {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             height: 100%;
-            border-radius: 5px;
-            transition: width 0.3s;
-            background: linear-gradient(90deg, #27ae60, #f1c40f, #e67e22, #e74c3c, #8e44ad);
+            color: var(--accent);
+            font-size: 1.1em;
+            padding: 40px;
+            text-align: center;
+            gap: 16px;
         }
+        .map-msg .spin {
+            width: 40px; height: 40px;
+            border: 4px solid rgba(233,69,96,0.2);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <div id="app">
         <div id="controls">
-            <h1><span class="emoji">💨</span> FART SIM 3000</h1>
-            <p class="subtitle">Neighborhood Demolition Edition</p>
+            <div id="title-wrap">
+                <h1><span class="emoji">💨</span> FART SIM 3000</h1>
+                <p class="subtitle">Neighborhood Demolition Edition</p>
+            </div>
 
+            <!-- Animated character -->
+            <div id="character-stage">
+                <div id="power-float">Power: <span id="power-pct">12</span>%</div>
+                <svg id="character-svg" viewBox="0 0 120 130">
+                    <g id="char-body">
+                        <!-- legs -->
+                        <rect x="44" y="100" width="10" height="22" rx="5" fill="#3b5998"/>
+                        <rect x="66" y="100" width="10" height="22" rx="5" fill="#3b5998"/>
+                        <!-- body -->
+                        <ellipse cx="60" cy="80" rx="32" ry="30" fill="#ff7a8c"/>
+                        <!-- belly -->
+                        <ellipse cx="60" cy="84" rx="22" ry="20" fill="#ffd1d8"/>
+                        <!-- arms -->
+                        <ellipse class="cheek" cx="28" cy="76" rx="9" ry="14" fill="#ff7a8c"/>
+                        <ellipse class="cheek" cx="92" cy="76" rx="9" ry="14" fill="#ff7a8c"/>
+                        <!-- head -->
+                        <circle cx="60" cy="38" r="26" fill="#ffb3bd"/>
+                        <!-- eyes -->
+                        <circle cx="51" cy="34" r="4.5" fill="#222"/>
+                        <circle cx="69" cy="34" r="4.5" fill="#222"/>
+                        <circle cx="52.5" cy="32.5" r="1.5" fill="#fff"/>
+                        <circle cx="70.5" cy="32.5" r="1.5" fill="#fff"/>
+                        <!-- eyebrows (concentration) -->
+                        <rect id="brow-l" x="45" y="25" width="11" height="3" rx="1.5" fill="#a0522d"/>
+                        <rect id="brow-r" x="64" y="25" width="11" height="3" rx="1.5" fill="#a0522d"/>
+                        <!-- mouth -->
+                        <path id="mouth" d="M 52 46 Q 60 52 68 46" stroke="#a0522d" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                        <!-- cheeks blush -->
+                        <circle cx="44" cy="42" r="4" fill="rgba(255,100,120,0.4)"/>
+                        <circle cx="76" cy="42" r="4" fill="rgba(255,100,120,0.4)"/>
+                    </g>
+                </svg>
+                <div id="charge-ring"></div>
+            </div>
+
+            <!-- Velocity -->
             <div class="control-group">
                 <label>
-                    Velocity (m/s)
-                    <span class="value-display" id="velocity-display">50</span>
+                    <span><span class="label-icon">🚀</span>Velocity</span>
+                    <span class="value-display"><span id="velocity-display">50</span> m/s</span>
                 </label>
                 <input type="range" id="velocity" min="1" max="500" value="50">
-                <div class="richter-meter">
-                    <div class="richter-fill" id="velocity-meter" style="width: 10%"></div>
-                </div>
+                <div class="meter"><div class="meter-fill" id="velocity-meter"></div></div>
             </div>
 
+            <!-- Volume -->
             <div class="control-group">
                 <label>
-                    Volume (decibels)
-                    <span class="value-display" id="volume-display">80</span>
+                    <span><span class="label-icon">🔊</span>Volume</span>
+                    <span class="value-display"><span id="volume-display">80</span> dB</span>
                 </label>
                 <input type="range" id="volume" min="10" max="200" value="80">
-                <div class="richter-meter">
-                    <div class="richter-fill" id="volume-meter" style="width: 37%"></div>
-                </div>
+                <div class="meter"><div class="meter-fill" id="volume-meter"></div></div>
             </div>
 
+            <!-- Duration -->
             <div class="control-group">
                 <label>
-                    Duration (seconds)
-                    <span class="value-display" id="duration-display">2.0</span>
+                    <span><span class="label-icon">⏱️</span>Duration</span>
+                    <span class="value-display"><span id="duration-display">2.0</span> s</span>
                 </label>
                 <input type="range" id="duration" min="1" max="100" value="20" step="1">
+                <div class="meter"><div class="meter-fill" id="duration-meter"></div></div>
             </div>
 
+            <!-- Diet -->
             <div class="control-group">
-                <label>
-                    Diet Boost
-                    <span class="value-display" id="diet-display">Beans</span>
-                </label>
-                <input type="range" id="diet" min="0" max="4" value="1" step="1">
+                <label><span><span class="label-icon">🍽️</span>Diet Boost</span></label>
+                <div id="diet-pills">
+                    <div class="diet-pill" data-diet="0" title="Salad">🥗</div>
+                    <div class="diet-pill active" data-diet="1" title="Beans">🫘</div>
+                    <div class="diet-pill" data-diet="2" title="Chili Dog">🌭</div>
+                    <div class="diet-pill" data-diet="3" title="Mega Burrito">🌯</div>
+                    <div class="diet-pill" data-diet="4" title="Nuclear Curry">🍛</div>
+                </div>
+                <div class="diet-name" id="diet-display">Beans</div>
             </div>
 
-            <div class="info-box" id="stats-box">
-                <div class="stat">
-                    <span>Blast Radius:</span>
-                    <span class="stat-value" id="blast-radius-stat">25 m</span>
-                </div>
-                <div class="stat">
-                    <span>Destructive Force:</span>
-                    <span class="stat-value" id="force-stat">1,200 N</span>
-                </div>
-                <div class="stat">
-                    <span>Fart Richter Scale:</span>
-                    <span class="stat-value" id="richter-stat">2.1</span>
-                </div>
-                <div class="stat">
-                    <span>Can Destroy House:</span>
-                    <span class="stat-value" id="destroy-stat">Nope</span>
-                </div>
+            <!-- Stats -->
+            <div id="stats-box">
+                <div class="stat"><span>💥 Blast Radius</span><span class="stat-value" id="blast-radius-stat">25 m</span></div>
+                <div class="stat"><span>🦵 Destructive Force</span><span class="stat-value" id="force-stat">1,200 N</span></div>
+                <div class="stat"><span>📊 Fart Richter Scale</span><span class="stat-value" id="richter-stat">2.1</span></div>
+                <div class="stat"><span>🏠 Can Destroy House</span><span id="destroy-badge">Nope</span></div>
             </div>
 
-            <button id="fire-btn">RELEASE THE BEAST</button>
-            <button id="reset-btn">Reset Simulation</button>
-
-            <div class="info-box" style="font-size: 0.75em; color: #888;">
-                Click the map to place yourself (green), then click again to mark Adam's house (red).
-                Adjust sliders and hit the button!
-            </div>
+            <button id="fire-btn">💨 RELEASE THE BEAST</button>
+            <p id="fire-hint">Hold to charge for maximum power</p>
+            <button id="reset-btn">↺ Reset Simulation</button>
         </div>
 
         <div id="map-container">
             <div id="map"></div>
-            <canvas id="blast-overlay"></canvas>
+            <canvas id="fx-canvas"></canvas>
             <div id="status-bar"></div>
+
+            <div id="step-tracker">
+                <div class="step-chip active" id="chip-1"><span class="dot"></span> 1. Place yourself</div>
+                <div class="step-chip" id="chip-2"><span class="dot"></span> 2. Mark Adam's house</div>
+                <div class="step-chip" id="chip-3"><span class="dot"></span> 3. Release the beast!</div>
+            </div>
+
             <div id="damage-report">
                 <h3 id="report-title">Damage Report</h3>
-                <p id="report-text"></p>
+                <div id="house-viz">
+                    <svg id="house-svg" viewBox="0 0 200 100"></svg>
+                </div>
+                <div id="report-text"></div>
+                <button id="close-report">Close</button>
             </div>
+
             <div id="instructions">
-                <h2>Welcome to Fart Sim 3000</h2>
-                <p>The world's most advanced flatulence-based demolition simulator.</p>
-                <div class="step"><span class="step-num">1.</span> Click the map to place <b>your position</b> (green marker)</div>
-                <div class="step"><span class="step-num">2.</span> Click again to mark <b>Adam's house</b> (red marker)</div>
-                <div class="step"><span class="step-num">3.</span> Adjust velocity, volume, duration, and diet</div>
-                <div class="step"><span class="step-num">4.</span> Hit <b>"RELEASE THE BEAST"</b> and see if you can level it!</div>
-                <button id="dismiss-instructions">Got it, let's rip!</button>
+                <h2>💨 Fart Sim 3000</h2>
+                <p class="intro">The world's most advanced flatulence-based demolition simulator.</p>
+                <div class="step"><span class="num">1</span><span>Click the map to place <b>your position</b> (green)</span></div>
+                <div class="step"><span class="num">2</span><span>Click again to mark <b>Adam's house</b> (red)</span></div>
+                <div class="step"><span class="num">3</span><span>Tune velocity, volume, duration &amp; diet</span></div>
+                <div class="step"><span class="num">4</span><span>Hold <b>RELEASE THE BEAST</b> to charge, then let go!</span></div>
+                <button id="dismiss-instructions">Got it, let's rip! 💨</button>
             </div>
         </div>
     </div>
@@ -389,7 +809,7 @@
         // ========== SIMULATION ENGINE ==========
         const DIETS = ['Salad', 'Beans', 'Chili Dog', 'Mega Burrito', 'Nuclear Curry'];
         const DIET_MULTIPLIERS = [0.5, 1.0, 2.0, 4.0, 8.0];
-        const HOUSE_DESTROY_THRESHOLD = 50000; // Newtons needed to flatten a house
+        const HOUSE_DESTROY_THRESHOLD = 50000;
 
         let playerPos = null;
         let adamPos = null;
@@ -397,39 +817,31 @@
         let playerMarker = null;
         let adamMarker = null;
         let blastCircle = null;
-        let clickMode = 'player'; // 'player' or 'adam'
+        let clickMode = 'player';
         let animationId = null;
+        let dietIndex = 1;
+        let chargeBoost = 1;
 
-        function calcBlastRadius(velocity, volume, duration, dietIndex) {
-            const dietMult = DIET_MULTIPLIERS[dietIndex];
-            // Blast radius in meters: combines velocity spread with volume pressure
-            return (velocity * 0.3 + volume * 0.15) * (duration / 10) * dietMult;
+        function calcBlastRadius(velocity, volume, duration, di) {
+            return (velocity * 0.3 + volume * 0.15) * (duration / 10) * DIET_MULTIPLIERS[di];
         }
-
-        function calcForce(velocity, volume, duration, dietIndex) {
-            const dietMult = DIET_MULTIPLIERS[dietIndex];
-            // Force in Newtons (totally scientific)
-            return velocity * volume * (duration / 10) * dietMult * 1.5;
+        function calcForce(velocity, volume, duration, di) {
+            return velocity * volume * (duration / 10) * DIET_MULTIPLIERS[di] * 1.5;
         }
-
         function calcRichter(force) {
-            // Fart Richter Scale (logarithmic, because science)
             return Math.max(0, Math.log10(force + 1) * 1.2).toFixed(1);
         }
-
         function getForceAtDistance(totalForce, blastRadius, distance) {
             if (distance <= 0) return totalForce;
             if (distance >= blastRadius) return 0;
-            // Inverse-square-ish falloff
             return totalForce * Math.pow(1 - (distance / blastRadius), 2);
         }
-
-        function getDestructionLevel(forceAtTarget) {
-            if (forceAtTarget >= HOUSE_DESTROY_THRESHOLD * 2) return { level: 'OBLITERATED', emoji: '💀', color: '#8e44ad', pct: 100 };
-            if (forceAtTarget >= HOUSE_DESTROY_THRESHOLD) return { level: 'DESTROYED', emoji: '🏚️', color: '#e74c3c', pct: 95 };
-            if (forceAtTarget >= HOUSE_DESTROY_THRESHOLD * 0.7) return { level: 'SEVERE DAMAGE', emoji: '🔥', color: '#e67e22', pct: 75 };
-            if (forceAtTarget >= HOUSE_DESTROY_THRESHOLD * 0.4) return { level: 'MODERATE DAMAGE', emoji: '💨', color: '#f1c40f', pct: 50 };
-            if (forceAtTarget >= HOUSE_DESTROY_THRESHOLD * 0.15) return { level: 'MINOR DAMAGE', emoji: '😬', color: '#2ecc71', pct: 25 };
+        function getDestructionLevel(f) {
+            if (f >= HOUSE_DESTROY_THRESHOLD * 2) return { level: 'OBLITERATED', emoji: '💀', color: '#8e44ad', pct: 100 };
+            if (f >= HOUSE_DESTROY_THRESHOLD) return { level: 'DESTROYED', emoji: '🏚️', color: '#e74c3c', pct: 95 };
+            if (f >= HOUSE_DESTROY_THRESHOLD * 0.7) return { level: 'SEVERE DAMAGE', emoji: '🔥', color: '#e67e22', pct: 75 };
+            if (f >= HOUSE_DESTROY_THRESHOLD * 0.4) return { level: 'MODERATE DAMAGE', emoji: '💨', color: '#f1c40f', pct: 50 };
+            if (f >= HOUSE_DESTROY_THRESHOLD * 0.15) return { level: 'MINOR DAMAGE', emoji: '😬', color: '#2ecc71', pct: 25 };
             return { level: 'NO EFFECT', emoji: '😂', color: '#3498db', pct: 5 };
         }
 
@@ -439,8 +851,14 @@
                 velocity: parseInt(document.getElementById('velocity').value),
                 volume: parseInt(document.getElementById('volume').value),
                 duration: parseInt(document.getElementById('duration').value),
-                diet: parseInt(document.getElementById('diet').value),
+                diet: dietIndex,
             };
+        }
+
+        function flashStat(el) {
+            el.classList.remove('flash');
+            void el.offsetWidth;
+            el.classList.add('flash');
         }
 
         function updateStats() {
@@ -456,30 +874,31 @@
 
             document.getElementById('velocity-meter').style.width = (v.velocity / 500 * 100) + '%';
             document.getElementById('volume-meter').style.width = ((v.volume - 10) / 190 * 100) + '%';
+            document.getElementById('duration-meter').style.width = (v.duration / 100 * 100) + '%';
 
             document.getElementById('blast-radius-stat').textContent = radius.toFixed(0) + ' m';
             document.getElementById('force-stat').textContent = force.toLocaleString(undefined, {maximumFractionDigits: 0}) + ' N';
             document.getElementById('richter-stat').textContent = richter;
 
+            // Power float on character (normalized roughly to a 0-100 feel)
+            const powerPct = Math.min(100, Math.round(calcRichter(force) / 8 * 100));
+            document.getElementById('power-pct').textContent = powerPct;
+
             const canDestroy = force >= HOUSE_DESTROY_THRESHOLD;
-            const destroyStat = document.getElementById('destroy-stat');
-            destroyStat.textContent = canDestroy ? 'YES!' : 'Nope';
-            destroyStat.style.color = canDestroy ? '#2ecc71' : '#e74c3c';
+            const badge = document.getElementById('destroy-badge');
+            badge.textContent = canDestroy ? 'YES! 💪' : 'Nope';
+            badge.style.background = canDestroy ? 'rgba(46,204,113,0.25)' : 'rgba(231,76,60,0.2)';
+            badge.style.color = canDestroy ? '#2ecc71' : '#e74c3c';
         }
 
         // ========== GOOGLE MAPS ==========
         function initMap() {
-            // Default to a generic suburban neighborhood
             const defaultCenter = { lat: 37.7749, lng: -122.4194 };
-
             map = new google.maps.Map(document.getElementById('map'), {
                 center: defaultCenter,
-                zoom: 17,
+                zoom: 18,
                 mapTypeId: 'satellite',
                 tilt: 0,
-                styles: [
-                    { elementType: 'labels.text.fill', stylers: [{ color: '#ffffff' }] },
-                ],
                 disableDefaultUI: false,
                 zoomControl: true,
                 mapTypeControl: true,
@@ -487,167 +906,313 @@
                 fullscreenControl: false,
             });
 
-            // Try to center on user's actual location
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        const userLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                        map.setCenter(userLoc);
-                    },
-                    () => { /* denied, stay at default */ }
+                    (pos) => map.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                    () => {}
                 );
             }
 
             map.addListener('click', (e) => {
                 const pos = { lat: e.latLng.lat(), lng: e.latLng.lng() };
-
                 if (clickMode === 'player') {
                     setPlayerPosition(pos);
                     clickMode = 'adam';
-                    showStatus("Now click on Adam's house!");
+                    setStep(2);
+                    showStatus("👍 Now click on Adam's house!");
                 } else {
                     setAdamPosition(pos);
                     clickMode = 'player';
-                    showStatus('Positions set! Adjust sliders and fire away!');
-                    setTimeout(() => hideStatus(), 3000);
+                    setStep(3);
+                    showStatus('🎯 Locked on! Tune your weapon and fire!');
+                    setTimeout(hideStatus, 3000);
                 }
             });
+            sizeCanvas();
         }
 
         function setPlayerPosition(pos) {
             playerPos = pos;
             if (playerMarker) playerMarker.setMap(null);
             playerMarker = new google.maps.Marker({
-                position: pos,
-                map: map,
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    fillColor: '#2ecc71',
-                    fillOpacity: 1,
-                    strokeColor: '#fff',
-                    strokeWeight: 2,
-                    scale: 12,
-                },
-                label: { text: 'YOU', className: 'marker-label' },
-                title: 'Your Position',
+                position: pos, map: map,
+                icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#2ecc71', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2, scale: 12 },
+                label: { text: 'YOU', className: 'marker-label' }, title: 'Your Position',
             });
         }
-
         function setAdamPosition(pos) {
             adamPos = pos;
             if (adamMarker) adamMarker.setMap(null);
             adamMarker = new google.maps.Marker({
-                position: pos,
-                map: map,
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    fillColor: '#e74c3c',
-                    fillOpacity: 1,
-                    strokeColor: '#fff',
-                    strokeWeight: 2,
-                    scale: 12,
-                },
-                label: { text: "ADAM'S", className: 'marker-label' },
-                title: "Adam's House",
+                position: pos, map: map,
+                icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#e74c3c', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2, scale: 12 },
+                label: { text: "ADAM'S", className: 'marker-label' }, title: "Adam's House",
             });
         }
-
-        function getDistanceMeters(pos1, pos2) {
+        function getDistanceMeters(p1, p2) {
             return google.maps.geometry.spherical.computeDistanceBetween(
-                new google.maps.LatLng(pos1.lat, pos1.lng),
-                new google.maps.LatLng(pos2.lat, pos2.lng)
-            );
+                new google.maps.LatLng(p1.lat, p1.lng), new google.maps.LatLng(p2.lat, p2.lng));
         }
 
-        // ========== BLAST ANIMATION ==========
+        // ========== STEP TRACKER ==========
+        function setStep(n) {
+            for (let i = 1; i <= 3; i++) {
+                const chip = document.getElementById('chip-' + i);
+                chip.classList.remove('active', 'done');
+                if (i < n) chip.classList.add('done');
+                else if (i === n) chip.classList.add('active');
+            }
+        }
+
+        // ========== PARTICLE FX CANVAS ==========
+        const fxCanvas = document.getElementById('fx-canvas');
+        const fxCtx = fxCanvas.getContext('2d');
+        let particles = [];
+
+        function sizeCanvas() {
+            fxCanvas.width = fxCanvas.offsetWidth;
+            fxCanvas.height = fxCanvas.offsetHeight;
+        }
+        window.addEventListener('resize', sizeCanvas);
+
+        function latLngToPixel(latLng) {
+            // Project a LatLng to container pixels using the map projection
+            const proj = map.getProjection();
+            if (!proj) return null;
+            const bounds = map.getBounds();
+            const ne = bounds.getNorthEast();
+            const sw = bounds.getSouthWest();
+            const topRight = proj.fromLatLngToPoint(ne);
+            const bottomLeft = proj.fromLatLngToPoint(sw);
+            const scale = Math.pow(2, map.getZoom());
+            const worldPoint = proj.fromLatLngToPoint(new google.maps.LatLng(latLng.lat, latLng.lng));
+            return {
+                x: (worldPoint.x - bottomLeft.x) * scale,
+                y: (worldPoint.y - topRight.y) * scale,
+            };
+        }
+
+        function spawnGasParticles(origin, count, power) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1 + Math.random() * (2 + power * 0.5);
+                particles.push({
+                    x: origin.x, y: origin.y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 0.5,
+                    life: 1,
+                    decay: 0.008 + Math.random() * 0.012,
+                    size: 6 + Math.random() * 14,
+                    hue: 70 + Math.random() * 40, // green-yellow gas
+                });
+            }
+        }
+
+        function spawnDebris(origin, count) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 3 + Math.random() * 8;
+                particles.push({
+                    x: origin.x, y: origin.y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 4,
+                    life: 1, decay: 0.012 + Math.random() * 0.01,
+                    size: 3 + Math.random() * 6,
+                    debris: true, gravity: 0.25,
+                    color: ['#8B4513','#a0522d','#c0392b','#666'][Math.floor(Math.random()*4)],
+                });
+            }
+        }
+
+        let fxRunning = false;
+        function runFx() {
+            if (fxRunning) return;
+            fxRunning = true;
+            (function frame() {
+                fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.x += p.vx; p.y += p.vy;
+                    if (p.gravity) p.vy += p.gravity; else p.vy -= 0.02;
+                    p.vx *= 0.99;
+                    p.life -= p.decay;
+                    if (p.life <= 0) { particles.splice(i, 1); continue; }
+                    fxCtx.globalAlpha = Math.max(0, p.life);
+                    if (p.debris) {
+                        fxCtx.fillStyle = p.color;
+                        fxCtx.fillRect(p.x, p.y, p.size, p.size);
+                    } else {
+                        const g = fxCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+                        g.addColorStop(0, `hsla(${p.hue},70%,55%,0.6)`);
+                        g.addColorStop(1, `hsla(${p.hue},70%,45%,0)`);
+                        fxCtx.fillStyle = g;
+                        fxCtx.beginPath();
+                        fxCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        fxCtx.fill();
+                    }
+                }
+                fxCtx.globalAlpha = 1;
+                if (particles.length > 0) {
+                    requestAnimationFrame(frame);
+                } else {
+                    fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+                    fxRunning = false;
+                }
+            })();
+        }
+
+        // ========== CHARACTER ANIMATION ==========
+        const charStage = document.getElementById('character-stage');
+        const chargeRing = document.getElementById('charge-ring');
+        let charging = false;
+        let chargeStart = 0;
+
+        function startCharge() {
+            charging = true;
+            chargeStart = Date.now();
+            charStage.classList.add('charging');
+            document.getElementById('fire-btn').classList.add('charging');
+            document.getElementById('mouth').setAttribute('d', 'M 54 48 Q 60 44 66 48'); // tense mouth
+            (function chargeFrame() {
+                if (!charging) return;
+                const held = Math.min((Date.now() - chargeStart) / 2000, 1);
+                chargeBoost = 1 + held * 1.5; // up to 2.5x
+                chargeRing.style.boxShadow = `inset 0 0 ${held * 30}px ${held * 8}px rgba(255,177,66,${held * 0.7})`;
+                // cheeks puff
+                const puff = 1 + held * 0.5;
+                document.querySelectorAll('.cheek').forEach(c => c.style.transform = `scale(${puff})`);
+                requestAnimationFrame(chargeFrame);
+            })();
+        }
+
+        function releaseCharge() {
+            if (!charging) return;
+            charging = false;
+            charStage.classList.remove('charging');
+            document.getElementById('fire-btn').classList.remove('charging');
+            chargeRing.style.boxShadow = 'inset 0 0 0 0 var(--accent2)';
+            document.querySelectorAll('.cheek').forEach(c => c.style.transform = '');
+            document.getElementById('mouth').setAttribute('d', 'M 50 46 Q 60 56 70 46'); // big relief grin
+            setTimeout(() => document.getElementById('mouth').setAttribute('d', 'M 52 46 Q 60 52 68 46'), 800);
+            fireBlast();
+        }
+
+        // ========== BLAST ==========
         function fireBlast() {
-            if (!playerPos) {
-                showStatus('Click the map to place yourself first!');
-                setTimeout(hideStatus, 2000);
-                return;
-            }
-            if (!adamPos) {
-                showStatus("Click the map to mark Adam's house!");
-                setTimeout(hideStatus, 2000);
-                return;
-            }
+            if (!playerPos) { showStatus('👇 Click the map to place yourself first!'); setTimeout(hideStatus, 2200); chargeBoost = 1; return; }
+            if (!adamPos) { showStatus("👇 Click the map to mark Adam's house!"); setTimeout(hideStatus, 2200); chargeBoost = 1; return; }
 
             const v = getValues();
-            const blastRadius = calcBlastRadius(v.velocity, v.volume, v.duration, v.diet);
-            const totalForce = calcForce(v.velocity, v.volume, v.duration, v.diet);
+            const boost = chargeBoost;
+            const blastRadius = calcBlastRadius(v.velocity, v.volume, v.duration, v.diet) * boost;
+            const totalForce = calcForce(v.velocity, v.volume, v.duration, v.diet) * boost;
             const distance = getDistanceMeters(playerPos, adamPos);
             const forceAtAdam = getForceAtDistance(totalForce, blastRadius, distance);
             const destruction = getDestructionLevel(forceAtAdam);
 
-            // Play fart sound
             playFartSound(v.velocity, v.volume, v.duration / 10, v.diet);
 
-            // Animate blast circle expanding on map
+            // Gas particles burst from player position
+            const originPx = latLngToPixel(playerPos);
+            if (originPx) {
+                spawnGasParticles(originPx, 40 + Math.round(v.volume / 2), DIET_MULTIPLIERS[v.diet]);
+                runFx();
+            }
+
+            chargeBoost = 1;
             animateBlast(blastRadius, totalForce, distance, forceAtAdam, destruction);
         }
 
         function animateBlast(blastRadius, totalForce, distance, forceAtAdam, destruction) {
             if (blastCircle) blastCircle.setMap(null);
-
             let currentRadius = 0;
-            const targetRadius = blastRadius;
             const steps = 60;
-            const increment = targetRadius / steps;
+            const increment = blastRadius / steps;
             let step = 0;
-
-            // Screen shake
+            let debrisFired = false;
             shakeScreen(calcRichter(totalForce));
 
             function animate() {
                 step++;
-                currentRadius = Math.min(currentRadius + increment, targetRadius);
-
+                currentRadius = Math.min(currentRadius + increment, blastRadius);
                 if (blastCircle) blastCircle.setMap(null);
-
                 const opacity = Math.max(0.1, 0.5 - (step / steps) * 0.4);
                 const reachedAdam = currentRadius >= distance;
 
                 blastCircle = new google.maps.Circle({
-                    center: playerPos,
-                    radius: currentRadius,
-                    map: map,
+                    center: playerPos, radius: currentRadius, map: map,
                     fillColor: reachedAdam ? '#e74c3c' : '#8B4513',
-                    fillOpacity: opacity,
-                    strokeColor: '#e94560',
-                    strokeWeight: 2,
-                    strokeOpacity: opacity + 0.2,
+                    fillOpacity: opacity, strokeColor: '#e94560',
+                    strokeWeight: 2, strokeOpacity: opacity + 0.2,
                 });
 
-                if (step < steps) {
-                    animationId = requestAnimationFrame(animate);
-                } else {
-                    showDamageReport(destruction, distance, blastRadius, forceAtAdam, totalForce);
+                // When wave hits Adam's, blow debris from his house
+                if (reachedAdam && !debrisFired && destruction.pct > 25) {
+                    debrisFired = true;
+                    const adamPx = latLngToPixel(adamPos);
+                    if (adamPx) { spawnDebris(adamPx, Math.round(destruction.pct / 2)); runFx(); }
                 }
-            }
 
+                if (step < steps) animationId = requestAnimationFrame(animate);
+                else showDamageReport(destruction, distance, blastRadius, forceAtAdam, totalForce);
+            }
             animate();
         }
 
         function shakeScreen(richter) {
-            const intensity = Math.min(richter * 2, 20);
+            const intensity = Math.min(richter * 2.5, 24);
             const container = document.getElementById('map-container');
-            let shakeSteps = 0;
-            const maxShakes = 30;
+            let s = 0; const max = 32;
+            (function shake() {
+                s++;
+                const decay = 1 - s / max;
+                container.style.transform = `translate(${(Math.random()-0.5)*intensity*decay}px, ${(Math.random()-0.5)*intensity*decay}px)`;
+                if (s < max) requestAnimationFrame(shake);
+                else container.style.transform = '';
+            })();
+        }
 
-            function doShake() {
-                shakeSteps++;
-                const decay = 1 - shakeSteps / maxShakes;
-                const x = (Math.random() - 0.5) * intensity * decay;
-                const y = (Math.random() - 0.5) * intensity * decay;
-                container.style.transform = `translate(${x}px, ${y}px)`;
-
-                if (shakeSteps < maxShakes) {
-                    requestAnimationFrame(doShake);
-                } else {
-                    container.style.transform = '';
+        // ========== HOUSE DESTRUCTION SVG ==========
+        function drawHouse(destructionPct) {
+            const svg = document.getElementById('house-svg');
+            const intact = 100 - destructionPct;
+            // Build a house with crumbling based on damage
+            let html = '';
+            // ground
+            html += '<rect x="0" y="92" width="200" height="8" fill="#3a3a2a"/>';
+            if (intact > 5) {
+                // walls - lean/crack as damage rises
+                const lean = (destructionPct / 100) * 8;
+                const wallH = 40 * (intact / 100) + 20;
+                const wallY = 92 - wallH;
+                html += `<rect x="${60+lean*0.3}" y="${wallY}" width="80" height="${wallH}" fill="#d4a373" transform="rotate(${lean*0.2} 100 92)"/>`;
+                // roof (gone if heavily damaged)
+                if (destructionPct < 70) {
+                    html += `<polygon points="55,${wallY} 100,${wallY-28} 145,${wallY}" fill="#a0522d"/>`;
+                }
+                // door
+                html += `<rect x="90" y="72" width="20" height="20" fill="#6b4226"/>`;
+                // window
+                if (destructionPct < 50) html += `<rect x="68" y="${wallY+8}" width="14" height="14" fill="#aaccff"/>`;
+                // cracks
+                if (destructionPct > 25) html += `<path d="M 100 ${wallY} L 105 ${wallY+15} L 98 ${wallY+30}" stroke="#333" stroke-width="1.5" fill="none"/>`;
+            }
+            // rubble pile (grows with damage)
+            if (destructionPct > 25) {
+                const rubbleCount = Math.round(destructionPct / 10);
+                for (let i = 0; i < rubbleCount; i++) {
+                    const rx = 50 + Math.random() * 100;
+                    const rs = 4 + Math.random() * 8;
+                    html += `<rect x="${rx}" y="${88 - Math.random()*6}" width="${rs}" height="${rs}" fill="${['#d4a373','#a0522d','#888'][i%3]}" transform="rotate(${Math.random()*45} ${rx} 88)"/>`;
                 }
             }
-            doShake();
+            // smoke for severe
+            if (destructionPct >= 75) {
+                html += '<circle cx="90" cy="40" r="14" fill="rgba(120,120,120,0.4)"/>';
+                html += '<circle cx="110" cy="32" r="11" fill="rgba(120,120,120,0.3)"/>';
+                html += '<circle cx="100" cy="50" r="16" fill="rgba(120,120,120,0.35)"/>';
+            }
+            svg.innerHTML = html;
         }
 
         function showDamageReport(destruction, distance, blastRadius, forceAtAdam, totalForce) {
@@ -658,119 +1223,126 @@
             title.innerHTML = `${destruction.emoji} ${destruction.level} ${destruction.emoji}`;
             title.style.color = destruction.color;
 
+            drawHouse(destruction.pct);
+
             const pctReach = Math.min(100, (blastRadius / distance * 100)).toFixed(0);
+            const integrity = Math.max(0, 100 - destruction.pct);
+            let quip = '';
+            if (destruction.level === 'OBLITERATED') quip = "Adam's house has been vaporized. He needs new friends AND a new house.";
+            else if (destruction.level === 'DESTROYED') quip = "Adam's house is flattened. Insurance won't cover this.";
+            else if (destruction.level === 'NO EFFECT') quip = "Adam didn't even notice. Eat more beans.";
+            else quip = "Adam felt that one. Keep tuning!";
+
             text.innerHTML = `
-                <b>Distance to Adam's house:</b> ${distance.toFixed(1)} m<br>
+                <b>Distance to Adam's:</b> ${distance.toFixed(1)} m<br>
                 <b>Blast radius:</b> ${blastRadius.toFixed(1)} m (${pctReach}% of distance)<br>
-                <b>Force at origin:</b> ${totalForce.toLocaleString(undefined, {maximumFractionDigits: 0})} N<br>
-                <b>Force at Adam's house:</b> ${forceAtAdam.toLocaleString(undefined, {maximumFractionDigits: 0})} N<br>
-                <b>House integrity:</b> ${Math.max(0, 100 - destruction.pct)}%<br>
-                ${destruction.level === 'OBLITERATED' ? '<br><b style="color:#8e44ad">Adam\'s house has been vaporized. He needs new friends AND a new house.</b>' : ''}
-                ${destruction.level === 'DESTROYED' ? '<br><b style="color:#e74c3c">Adam\'s house is flattened. Insurance won\'t cover this.</b>' : ''}
-                ${destruction.level === 'NO EFFECT' ? '<br><b style="color:#3498db">Adam didn\'t even notice. Eat more beans.</b>' : ''}
+                <b>Force at origin:</b> ${totalForce.toLocaleString(undefined,{maximumFractionDigits:0})} N<br>
+                <b>Force at Adam's:</b> ${forceAtAdam.toLocaleString(undefined,{maximumFractionDigits:0})} N
+                <div class="report-bars">
+                    <b>House Integrity:</b>
+                    <div class="report-bar-track"><div class="report-bar-fill" id="integrity-bar"></div></div>
+                </div>
+                <i style="color:${destruction.color}">${quip}</i>
             `;
 
-            report.style.display = 'block';
-            setTimeout(() => { report.style.display = 'none'; }, 8000);
+            report.classList.add('show');
+            // animate integrity bar
+            setTimeout(() => {
+                const bar = document.getElementById('integrity-bar');
+                if (bar) {
+                    bar.style.width = integrity + '%';
+                    bar.style.background = integrity > 60 ? 'linear-gradient(90deg,#27ae60,#2ecc71)'
+                        : integrity > 25 ? 'linear-gradient(90deg,#e67e22,#f1c40f)'
+                        : 'linear-gradient(90deg,#8e44ad,#e74c3c)';
+                }
+            }, 100);
         }
 
-        // ========== SOUND ENGINE (Web Audio API) ==========
-        function playFartSound(velocity, volume, durationSec, dietIndex) {
+        // ========== SOUND ENGINE ==========
+        function playFartSound(velocity, volume, durationSec, di) {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
             const duration = Math.min(durationSec, 5);
-
-            // Base oscillator - the rumble
             const osc1 = ctx.createOscillator();
             osc1.type = 'sawtooth';
-            osc1.frequency.setValueAtTime(60 + dietIndex * 15, ctx.currentTime);
+            osc1.frequency.setValueAtTime(60 + di * 15, ctx.currentTime);
             osc1.frequency.exponentialRampToValueAtTime(30 + velocity * 0.2, ctx.currentTime + duration);
-
-            // Sub bass
             const osc2 = ctx.createOscillator();
             osc2.type = 'sine';
             osc2.frequency.setValueAtTime(40, ctx.currentTime);
             osc2.frequency.exponentialRampToValueAtTime(20, ctx.currentTime + duration);
-
-            // Noise for the "flapping" texture
             const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * duration, ctx.sampleRate);
-            const noiseData = noiseBuffer.getChannelData(0);
-            for (let i = 0; i < noiseData.length; i++) {
-                noiseData[i] = (Math.random() * 2 - 1) * 0.3;
-            }
+            const nd = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < nd.length; i++) nd[i] = (Math.random() * 2 - 1) * 0.3;
             const noise = ctx.createBufferSource();
             noise.buffer = noiseBuffer;
-
-            // LFO for fluttering effect
             const lfo = ctx.createOscillator();
             lfo.frequency.value = 8 + velocity * 0.05;
             const lfoGain = ctx.createGain();
             lfoGain.gain.value = 20 + volume * 0.3;
-            lfo.connect(lfoGain);
-            lfoGain.connect(osc1.frequency);
-
-            // Filter
+            lfo.connect(lfoGain); lfoGain.connect(osc1.frequency);
             const filter = ctx.createBiquadFilter();
             filter.type = 'lowpass';
             filter.frequency.value = 200 + velocity * 2;
             filter.Q.value = 5;
-
-            // Master gain
             const gain = ctx.createGain();
             const masterVol = Math.min(0.6, volume / 200 * 0.6);
             gain.gain.setValueAtTime(masterVol, ctx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
-
-            // Connect the graph
-            osc1.connect(filter);
-            osc2.connect(filter);
-            noise.connect(filter);
-            filter.connect(gain);
-            gain.connect(ctx.destination);
-
-            // Start everything
-            osc1.start(ctx.currentTime);
-            osc2.start(ctx.currentTime);
-            noise.start(ctx.currentTime);
-            lfo.start(ctx.currentTime);
-
-            // Stop
-            osc1.stop(ctx.currentTime + duration);
-            osc2.stop(ctx.currentTime + duration);
-            noise.stop(ctx.currentTime + duration);
-            lfo.stop(ctx.currentTime + duration);
-
+            osc1.connect(filter); osc2.connect(filter); noise.connect(filter);
+            filter.connect(gain); gain.connect(ctx.destination);
+            osc1.start(); osc2.start(); noise.start(); lfo.start();
+            osc1.stop(ctx.currentTime + duration); osc2.stop(ctx.currentTime + duration);
+            noise.stop(ctx.currentTime + duration); lfo.stop(ctx.currentTime + duration);
             setTimeout(() => ctx.close(), (duration + 1) * 1000);
         }
 
-        // ========== STATUS HELPERS ==========
+        // ========== STATUS ==========
         function showStatus(msg) {
             const bar = document.getElementById('status-bar');
             bar.textContent = msg;
-            bar.style.display = 'block';
+            bar.classList.add('show');
         }
-
         function hideStatus() {
-            document.getElementById('status-bar').style.display = 'none';
+            document.getElementById('status-bar').classList.remove('show');
         }
 
         // ========== EVENT LISTENERS ==========
-        document.getElementById('velocity').addEventListener('input', updateStats);
-        document.getElementById('volume').addEventListener('input', updateStats);
-        document.getElementById('duration').addEventListener('input', updateStats);
-        document.getElementById('diet').addEventListener('input', updateStats);
+        ['velocity', 'volume', 'duration'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateStats);
+        });
 
-        document.getElementById('fire-btn').addEventListener('click', fireBlast);
+        // Diet pills
+        document.querySelectorAll('.diet-pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                document.querySelectorAll('.diet-pill').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                dietIndex = parseInt(pill.dataset.diet);
+                updateStats();
+            });
+        });
+
+        // Fire button - hold to charge
+        const fireBtn = document.getElementById('fire-btn');
+        fireBtn.addEventListener('mousedown', startCharge);
+        fireBtn.addEventListener('mouseup', releaseCharge);
+        fireBtn.addEventListener('mouseleave', () => { if (charging) releaseCharge(); });
+        fireBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startCharge(); });
+        fireBtn.addEventListener('touchend', (e) => { e.preventDefault(); releaseCharge(); });
+
+        document.getElementById('close-report').addEventListener('click', () => {
+            document.getElementById('damage-report').classList.remove('show');
+        });
 
         document.getElementById('reset-btn').addEventListener('click', () => {
             if (playerMarker) playerMarker.setMap(null);
             if (adamMarker) adamMarker.setMap(null);
             if (blastCircle) blastCircle.setMap(null);
-            playerPos = null;
-            adamPos = null;
-            clickMode = 'player';
-            document.getElementById('damage-report').style.display = 'none';
+            playerPos = null; adamPos = null; clickMode = 'player';
+            particles = [];
+            document.getElementById('damage-report').classList.remove('show');
             if (animationId) cancelAnimationFrame(animationId);
-            showStatus('Reset! Click to place yourself.');
+            setStep(1);
+            showStatus('↺ Reset! Click to place yourself.');
             setTimeout(hideStatus, 2000);
         });
 
@@ -778,30 +1350,27 @@
             document.getElementById('instructions').style.display = 'none';
         });
 
-        // Initial stats calculation
         updateStats();
     </script>
 
     <!-- Load API key from config.js (not tracked by git) -->
     <script src="config.js"></script>
     <script>
-        // Load Google Maps with key from config
         window.gm_authFailure = function() {
-            document.getElementById('map').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#e94560;font-size:1.2em;padding:40px;text-align:center;">Google Maps auth failed. Check that the Maps JavaScript API is enabled for your key in Google Cloud Console.</div>';
+            document.getElementById('map').innerHTML = '<div class="map-msg">⚠️ Google Maps auth failed.<br>Enable the Maps JavaScript API for your key in Google Cloud Console.</div>';
         };
         (function() {
             var mapDiv = document.getElementById('map');
             if (typeof GOOGLE_MAPS_API_KEY === 'undefined' || GOOGLE_MAPS_API_KEY === 'YOUR_API_KEY_HERE') {
-                mapDiv.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#e94560;font-size:1.2em;padding:40px;text-align:center;">Copy config.example.js to config.js and add your Google Maps API key.</div>';
+                mapDiv.innerHTML = '<div class="map-msg">🔑 Copy config.example.js to config.js<br>and add your Google Maps API key.</div>';
                 return;
             }
-            mapDiv.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:1em;">Loading Google Maps (key: ' + GOOGLE_MAPS_API_KEY.substring(0, 8) + '...)</div>';
+            mapDiv.innerHTML = '<div class="map-msg"><div class="spin"></div>Loading Google Maps...</div>';
             var s = document.createElement('script');
             s.src = 'https://maps.googleapis.com/maps/api/js?key=' + GOOGLE_MAPS_API_KEY + '&libraries=geometry&callback=initMap';
-            s.async = true;
-            s.defer = true;
+            s.async = true; s.defer = true;
             s.onerror = function() {
-                mapDiv.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#e94560;font-size:1.2em;padding:40px;text-align:center;">Failed to load Google Maps script. Check network/console.</div>';
+                mapDiv.innerHTML = '<div class="map-msg">⚠️ Failed to load Google Maps script.<br>Check network/console.</div>';
             };
             document.body.appendChild(s);
         })();
