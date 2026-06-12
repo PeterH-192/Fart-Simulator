@@ -5,1375 +5,926 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fart Simulator 3000</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --accent: #e94560;
-            --accent2: #ffb142;
-            --green: #2ecc71;
-            --bg-dark: #0d1126;
-            --bg-panel1: #16213e;
-            --bg-panel2: #0f3460;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg-dark);
-            color: #eee;
-            overflow: hidden;
-            height: 100vh;
-        }
-
-        #app {
-            display: flex;
-            height: 100vh;
-        }
-
-        /* ============ CONTROL PANEL ============ */
-        #controls {
-            width: 340px;
-            background: linear-gradient(180deg, var(--bg-panel1), var(--bg-panel2));
-            padding: 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            overflow-y: auto;
-            border-right: 3px solid var(--accent);
-            z-index: 10;
-            position: relative;
-        }
-
-        #controls::-webkit-scrollbar { width: 8px; }
-        #controls::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
-
-        /* Animated title */
-        #title-wrap {
-            text-align: center;
-            position: relative;
-        }
-
-        #controls h1 {
-            font-size: 1.7em;
-            color: var(--accent);
-            text-shadow: 0 0 20px rgba(233, 69, 96, 0.6);
-            letter-spacing: 1px;
-        }
-
-        #controls h1 .emoji {
-            display: inline-block;
-            font-size: 1.1em;
-            animation: wobble 1.6s ease-in-out infinite;
-        }
-
-        @keyframes wobble {
-            0%, 100% { transform: rotate(-8deg) scale(1); }
-            50% { transform: rotate(8deg) scale(1.15); }
-        }
-
-        .subtitle {
-            text-align: center;
-            font-size: 0.78em;
-            color: #aaa;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        /* ============ CHARACTER STAGE ============ */
-        #character-stage {
-            background: radial-gradient(circle at 50% 40%, #1f2b4d, #0a0f24);
-            border-radius: 14px;
-            padding: 10px;
-            position: relative;
-            height: 150px;
-            overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-
-        #character-svg {
-            position: absolute;
-            left: 50%;
-            bottom: 6px;
-            transform: translateX(-50%);
-            width: 120px;
-            height: 130px;
-        }
-
-        /* Character idle bob */
-        #char-body {
-            transform-box: fill-box;
-            transform-origin: center bottom;
-            animation: bob 2.4s ease-in-out infinite;
-        }
-
-        @keyframes bob {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-4px); }
-        }
-
-        .cheek {
-            transform-box: fill-box;
-            transform-origin: center;
-            transition: transform 0.3s;
-        }
-
-        /* Charge state - body tenses */
-        #character-stage.charging #char-body {
-            animation: tense 0.25s ease-in-out infinite;
-        }
-
-        @keyframes tense {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(1px) scale(1.04, 0.97); }
-        }
-
-        #charge-ring {
-            position: absolute;
-            inset: 0;
-            border-radius: 14px;
-            pointer-events: none;
-            box-shadow: inset 0 0 0 0 var(--accent2);
-            transition: box-shadow 0.1s;
-        }
-
-        /* Power label floating over character */
-        #power-float {
-            position: absolute;
-            top: 8px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.7em;
-            color: var(--accent2);
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            opacity: 0.85;
-        }
-
-        /* ============ CONTROL GROUPS ============ */
-        .control-group {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            padding: 12px 14px;
-            border: 1px solid rgba(255,255,255,0.04);
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        .control-group:hover {
-            border-color: rgba(233, 69, 96, 0.4);
-            box-shadow: 0 0 16px rgba(233, 69, 96, 0.12);
-        }
-
-        .control-group label {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.82em;
-            color: #cfcfe0;
-            margin-bottom: 8px;
-        }
-
-        .control-group .label-icon {
-            margin-right: 5px;
-        }
-
-        .value-display {
-            color: var(--accent2);
-            font-weight: bold;
-            font-size: 1.05em;
-            background: rgba(0,0,0,0.3);
-            padding: 1px 8px;
-            border-radius: 6px;
-            min-width: 52px;
-            text-align: right;
-        }
-
-        input[type="range"] {
-            width: 100%;
-            -webkit-appearance: none;
-            height: 8px;
-            border-radius: 4px;
-            background: #0a0f24;
-            outline: none;
-            cursor: pointer;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 35% 35%, #ff7a8c, var(--accent));
-            cursor: pointer;
-            box-shadow: 0 0 12px rgba(233, 69, 96, 0.7);
-            transition: transform 0.1s;
-        }
-
-        input[type="range"]::-webkit-slider-thumb:active {
-            transform: scale(1.25);
-        }
-
-        input[type="range"]::-moz-range-thumb {
-            width: 22px;
-            height: 22px;
-            border: none;
-            border-radius: 50%;
-            background: radial-gradient(circle at 35% 35%, #ff7a8c, var(--accent));
-            cursor: pointer;
-            box-shadow: 0 0 12px rgba(233, 69, 96, 0.7);
-        }
-
-        /* Animated meter bars */
-        .meter {
-            height: 8px;
-            background: #0a0f24;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 8px;
-            position: relative;
-        }
-
-        .meter-fill {
-            height: 100%;
-            border-radius: 4px;
-            width: 10%;
-            transition: width 0.25s cubic-bezier(.34,1.56,.64,1);
-            background: linear-gradient(90deg, #27ae60, #f1c40f, #e67e22, #e74c3c, #8e44ad);
-            background-size: 300% 100%;
-            position: relative;
-        }
-
-        .meter-fill::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            animation: shimmer 1.8s linear infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        /* Diet selector pills */
-        #diet-pills {
-            display: flex;
-            gap: 4px;
-            margin-top: 4px;
-        }
-
-        .diet-pill {
-            flex: 1;
-            text-align: center;
-            padding: 7px 2px;
-            border-radius: 8px;
-            font-size: 1.3em;
-            background: rgba(0,0,0,0.25);
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 2px solid transparent;
-            filter: grayscale(0.6);
-        }
-
-        .diet-pill:hover { transform: translateY(-2px); filter: grayscale(0); }
-
-        .diet-pill.active {
-            border-color: var(--accent2);
-            background: rgba(255, 177, 66, 0.18);
-            filter: grayscale(0);
-            transform: translateY(-2px);
-            box-shadow: 0 0 12px rgba(255, 177, 66, 0.4);
-        }
-
-        .diet-name {
-            text-align: center;
-            font-size: 0.82em;
-            color: var(--accent2);
-            margin-top: 6px;
-            font-weight: bold;
-        }
-
-        /* ============ STATS DASHBOARD ============ */
-        #stats-box {
-            background: rgba(233, 69, 96, 0.08);
-            border: 1px solid rgba(233, 69, 96, 0.3);
-            border-radius: 12px;
-            padding: 12px;
-        }
-
-        .stat {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 5px 0;
-            font-size: 0.82em;
-        }
-
-        .stat-value {
-            color: var(--accent2);
-            font-weight: bold;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .stat-value.flash {
-            animation: statflash 0.4s;
-        }
-
-        @keyframes statflash {
-            0% { color: #fff; transform: scale(1.3); }
-            100% { color: var(--accent2); transform: scale(1); }
-        }
-
-        #destroy-badge {
-            display: inline-block;
-            padding: 2px 10px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.9em;
-            transition: all 0.3s;
-        }
-
-        /* ============ BUTTONS ============ */
-        #fire-btn {
-            width: 100%;
-            padding: 16px;
-            font-size: 1.25em;
-            font-weight: bold;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            background: linear-gradient(135deg, var(--accent), #c0392b);
-            color: white;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(233, 69, 96, 0.4);
-            user-select: none;
-        }
-
-        #fire-btn::before {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 0; height: 0;
-            background: rgba(255,255,255,0.3);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.4s, height 0.4s;
-        }
-
-        #fire-btn:hover { transform: scale(1.03); box-shadow: 0 6px 30px rgba(233, 69, 96, 0.6); }
-        #fire-btn:active::before { width: 300px; height: 300px; }
-
-        #fire-btn.charging {
-            background: linear-gradient(135deg, var(--accent2), var(--accent));
-            animation: btnpulse 0.4s ease-in-out infinite;
-        }
-
-        @keyframes btnpulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        #fire-hint {
-            text-align: center;
-            font-size: 0.7em;
-            color: #8a8aa0;
-            margin-top: -6px;
-        }
-
-        #reset-btn {
-            width: 100%;
-            padding: 9px;
-            font-size: 0.85em;
-            border: 2px solid var(--accent);
-            border-radius: 8px;
-            cursor: pointer;
-            background: transparent;
-            color: var(--accent);
-            transition: all 0.2s;
-        }
-
-        #reset-btn:hover { background: rgba(233, 69, 96, 0.15); }
-
-        /* ============ MAP AREA ============ */
-        #map-container {
-            flex: 1;
-            position: relative;
-        }
-
-        #map { width: 100%; height: 100%; }
-
-        #fx-canvas {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 5;
-        }
-
-        /* Status toast */
-        #status-bar {
-            position: absolute;
-            top: 16px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-80px);
-            background: rgba(13, 17, 38, 0.92);
-            color: #fff;
-            padding: 10px 24px;
-            border-radius: 24px;
-            font-size: 0.9em;
-            font-weight: 600;
-            z-index: 6;
-            border: 1px solid var(--accent);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            opacity: 0;
-            transition: transform 0.35s cubic-bezier(.34,1.56,.64,1), opacity 0.35s;
-            pointer-events: none;
-        }
-
-        #status-bar.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-
-        /* Step tracker chips */
-        #step-tracker {
-            position: absolute;
-            top: 16px;
-            left: 16px;
-            z-index: 6;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .step-chip {
-            background: rgba(13, 17, 38, 0.85);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 10px;
-            padding: 8px 14px;
-            font-size: 0.8em;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-            opacity: 0.55;
-        }
-
-        .step-chip.active {
-            border-color: var(--accent2);
-            opacity: 1;
-            box-shadow: 0 0 14px rgba(255, 177, 66, 0.3);
-            transform: scale(1.04);
-        }
-
-        .step-chip.done {
-            border-color: var(--green);
-            opacity: 0.85;
-        }
-
-        .step-chip .dot {
-            width: 10px; height: 10px;
-            border-radius: 50%;
-            background: #555;
-        }
-        .step-chip.active .dot { background: var(--accent2); animation: blink 0.8s infinite; }
-        .step-chip.done .dot { background: var(--green); }
-
-        @keyframes blink { 50% { opacity: 0.3; } }
-
-        /* Damage report card */
-        #damage-report {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%) scale(0.7);
-            background: linear-gradient(160deg, rgba(20,25,50,0.97), rgba(10,14,30,0.97));
-            border: 2px solid var(--accent);
-            border-radius: 18px;
-            padding: 24px 30px;
-            z-index: 8;
-            text-align: center;
-            min-width: 340px;
-            max-width: 440px;
-            box-shadow: 0 10px 50px rgba(0,0,0,0.6);
-            opacity: 0;
-            pointer-events: none;
-            transition: transform 0.4s cubic-bezier(.34,1.56,.64,1), opacity 0.4s;
-        }
-
-        #damage-report.show {
-            transform: translate(-50%, -50%) scale(1);
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        #report-title {
-            font-size: 1.5em;
-            margin-bottom: 14px;
-            animation: titlepop 0.5s;
-        }
-
-        @keyframes titlepop {
-            0% { transform: scale(0); }
-            70% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-
-        /* House destruction visual */
-        #house-viz {
-            height: 90px;
-            margin: 10px 0 16px;
-            position: relative;
-        }
-
-        #house-svg { height: 100%; }
-
-        #report-text {
-            font-size: 0.88em;
-            line-height: 1.7;
-            text-align: left;
-            background: rgba(0,0,0,0.25);
-            padding: 12px 16px;
-            border-radius: 10px;
-        }
-
-        #report-text b { color: var(--accent2); }
-
-        .report-bars {
-            margin-top: 8px;
-        }
-
-        .report-bar-track {
-            height: 14px;
-            background: rgba(0,0,0,0.4);
-            border-radius: 7px;
-            overflow: hidden;
-            margin: 4px 0 10px;
-        }
-
-        .report-bar-fill {
-            height: 100%;
-            border-radius: 7px;
-            width: 0;
-            transition: width 1s cubic-bezier(.22,1,.36,1);
-        }
-
-        #close-report {
-            margin-top: 16px;
-            padding: 10px 30px;
-            background: var(--accent);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-size: 0.95em;
-            cursor: pointer;
-            font-weight: bold;
-            transition: transform 0.15s;
-        }
-        #close-report:hover { transform: scale(1.05); }
-
-        /* Instructions overlay */
-        #instructions {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(160deg, rgba(20,25,50,0.97), rgba(10,14,30,0.97));
-            border: 2px solid var(--accent);
-            border-radius: 18px;
-            padding: 32px;
-            z-index: 9;
-            text-align: center;
-            max-width: 460px;
-            box-shadow: 0 10px 50px rgba(0,0,0,0.6);
-        }
-
-        #instructions h2 {
-            color: var(--accent);
-            margin-bottom: 6px;
-            font-size: 1.6em;
-        }
-        #instructions .intro {
-            color: #aaa;
-            font-size: 0.85em;
-            margin-bottom: 16px;
-        }
-
-        #instructions .step {
-            background: rgba(233, 69, 96, 0.08);
-            border-radius: 10px;
-            padding: 10px 14px;
-            margin: 8px 0;
-            text-align: left;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 0.9em;
-        }
-        #instructions .step .num {
-            background: var(--accent);
-            color: white;
-            width: 26px; height: 26px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            flex-shrink: 0;
-        }
-
-        #dismiss-instructions {
-            margin-top: 18px;
-            padding: 12px 36px;
-            background: linear-gradient(135deg, var(--accent), #c0392b);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-size: 1.05em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.15s;
-        }
-        #dismiss-instructions:hover { transform: scale(1.05); }
-
-        .marker-label {
-            background: rgba(0, 0, 0, 0.75);
-            color: white;
-            padding: 2px 7px;
-            border-radius: 5px;
-            font-size: 11px;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-
-        /* Map loading / error message */
-        .map-msg {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: var(--accent);
-            font-size: 1.1em;
-            padding: 40px;
-            text-align: center;
-            gap: 16px;
-        }
-        .map-msg .spin {
-            width: 40px; height: 40px;
-            border: 4px solid rgba(233,69,96,0.2);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.9s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --accent:#e94560;--accent2:#ffb142;--green:#2ecc71;
+            --bg-dark:#080c1a;--bg-panel1:#111833;--bg-panel2:#0b1535;
+            --glow-accent:rgba(233,69,96,0.5);--glow-gold:rgba(255,177,66,0.5);
+        }
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg-dark);color:#e0e0f0;overflow:hidden;height:100vh}
+        #app{display:flex;height:100vh}
+
+        /* ====== PANEL ====== */
+        #controls{
+            width:350px;background:linear-gradient(175deg,var(--bg-panel1),var(--bg-panel2));
+            padding:16px 18px;display:flex;flex-direction:column;gap:12px;
+            overflow-y:auto;border-right:2px solid var(--accent);z-index:10;
+            scrollbar-width:thin;scrollbar-color:var(--accent) transparent;
+        }
+        #controls::-webkit-scrollbar{width:6px}
+        #controls::-webkit-scrollbar-thumb{background:var(--accent);border-radius:3px}
+
+        /* Ambient particle canvas behind panel */
+        #panel-bg-canvas{position:absolute;top:0;left:0;width:350px;height:100%;pointer-events:none;z-index:0;opacity:0.3}
+        #controls>*{position:relative;z-index:1}
+
+        /* Title */
+        .title-row{text-align:center}
+        .title-row h1{font-size:1.65em;color:var(--accent);letter-spacing:1px;
+            text-shadow:0 0 18px var(--glow-accent),0 0 40px rgba(233,69,96,0.2)}
+        .title-row h1 .wobble{display:inline-block;animation:wobble 1.6s ease-in-out infinite}
+        @keyframes wobble{0%,100%{transform:rotate(-10deg) scale(1)}50%{transform:rotate(10deg) scale(1.18)}}
+        .subtitle{font-size:.7em;color:#667;letter-spacing:3px;text-transform:uppercase;margin-top:2px}
+
+        /* ====== CHARACTER ====== */
+        #char-stage{
+            background:radial-gradient(ellipse at 50% 55%,#192244,#0a0f24);
+            border-radius:16px;height:160px;position:relative;overflow:hidden;
+            border:1px solid rgba(233,69,96,0.15);
+            box-shadow:inset 0 0 30px rgba(0,0,0,0.5);
+        }
+        #char-stage canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+        #power-label{
+            position:absolute;top:8px;left:50%;transform:translateX(-50%);
+            font-size:.68em;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+            color:var(--accent2);opacity:.85;z-index:2;
+        }
+        #charge-arc{
+            position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+            width:110px;height:6px;border-radius:3px;background:rgba(255,255,255,0.06);overflow:hidden;z-index:2;
+        }
+        #charge-arc-fill{height:100%;width:0%;border-radius:3px;
+            background:linear-gradient(90deg,var(--accent2),var(--accent));
+            transition:width 0.08s linear;box-shadow:0 0 8px var(--glow-gold)}
+
+        /* ====== CONTROLS ====== */
+        .cg{
+            background:rgba(255,255,255,0.03);border-radius:12px;padding:10px 12px;
+            border:1px solid rgba(255,255,255,0.04);transition:border-color .2s,box-shadow .2s;
+        }
+        .cg:hover{border-color:rgba(233,69,96,0.3);box-shadow:0 0 14px rgba(233,69,96,0.08)}
+        .cg label{display:flex;justify-content:space-between;align-items:center;font-size:.8em;color:#a0a0c0;margin-bottom:6px}
+        .vd{color:var(--accent2);font-weight:700;font-size:1em;background:rgba(0,0,0,0.35);
+            padding:1px 8px;border-radius:6px;min-width:56px;text-align:right;font-variant-numeric:tabular-nums}
+
+        input[type=range]{width:100%;-webkit-appearance:none;height:6px;border-radius:3px;background:#0a0e20;outline:none;cursor:pointer;margin:2px 0}
+        input[type=range]::-webkit-slider-thumb{
+            -webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+            background:radial-gradient(circle at 35% 35%,#ff8fa0,var(--accent));cursor:pointer;
+            box-shadow:0 0 10px var(--glow-accent);transition:transform .1s}
+        input[type=range]::-webkit-slider-thumb:active{transform:scale(1.3)}
+        input[type=range]::-moz-range-thumb{
+            width:20px;height:20px;border:none;border-radius:50%;
+            background:radial-gradient(circle at 35% 35%,#ff8fa0,var(--accent));cursor:pointer;
+            box-shadow:0 0 10px var(--glow-accent)}
+
+        .meter{height:6px;background:#080c1a;border-radius:3px;overflow:hidden;margin-top:6px;position:relative}
+        .meter-fill{height:100%;border-radius:3px;width:10%;
+            transition:width .25s cubic-bezier(.34,1.56,.64,1);position:relative;
+            background:linear-gradient(90deg,#27ae60,#f1c40f,#e67e22,#e74c3c,#8e44ad);background-size:300% 100%}
+        .meter-fill::after{content:'';position:absolute;inset:0;
+            background:linear-gradient(90deg,transparent,rgba(255,255,255,0.45),transparent);animation:shimmer 2s linear infinite}
+        @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+        /* Diet pills */
+        #diet-pills{display:flex;gap:4px;margin-top:4px}
+        .dp{flex:1;text-align:center;padding:7px 2px;border-radius:8px;font-size:1.3em;
+            background:rgba(0,0,0,0.3);cursor:pointer;transition:all .2s;border:2px solid transparent;
+            filter:grayscale(.6) brightness(.8)}
+        .dp:hover{transform:translateY(-2px);filter:grayscale(0) brightness(1)}
+        .dp.active{border-color:var(--accent2);background:rgba(255,177,66,0.15);filter:grayscale(0) brightness(1);
+            transform:translateY(-2px);box-shadow:0 0 14px var(--glow-gold)}
+        .diet-name{text-align:center;font-size:.78em;color:var(--accent2);margin-top:5px;font-weight:700}
+
+        /* Stats */
+        #stats-box{background:rgba(233,69,96,0.06);border:1px solid rgba(233,69,96,0.2);border-radius:12px;padding:10px 12px}
+        .stat{display:flex;justify-content:space-between;align-items:center;margin:4px 0;font-size:.79em}
+        .stat-val{color:var(--accent2);font-weight:700;font-variant-numeric:tabular-nums}
+        #destroy-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-weight:700;font-size:.88em;transition:all .3s}
+
+        /* Buttons */
+        #fire-btn{
+            width:100%;padding:15px;font-size:1.2em;font-weight:800;border:none;border-radius:12px;
+            cursor:pointer;color:white;text-transform:uppercase;letter-spacing:2px;
+            position:relative;overflow:hidden;user-select:none;
+            background:linear-gradient(135deg,var(--accent),#a3233a);
+            box-shadow:0 4px 20px var(--glow-accent);transition:transform .15s,box-shadow .15s;
+        }
+        #fire-btn:hover{transform:scale(1.03);box-shadow:0 6px 30px var(--glow-accent)}
+        #fire-btn.charging{
+            background:linear-gradient(135deg,var(--accent2),var(--accent));
+            animation:btnpulse .35s ease-in-out infinite;
+            box-shadow:0 6px 30px var(--glow-gold);
+        }
+        @keyframes btnpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+        .fire-hint{text-align:center;font-size:.68em;color:#556;margin-top:-4px}
+        #reset-btn{
+            width:100%;padding:8px;font-size:.82em;border:1px solid var(--accent);border-radius:8px;
+            cursor:pointer;background:transparent;color:var(--accent);transition:all .2s}
+        #reset-btn:hover{background:rgba(233,69,96,0.1)}
+
+        /* ====== MAP ====== */
+        #map-container{flex:1;position:relative;overflow:hidden}
+        #map{width:100%;height:100%}
+        #fx-canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5}
+        #flash-overlay{
+            position:absolute;inset:0;pointer-events:none;z-index:4;
+            background:radial-gradient(circle,rgba(255,200,50,0.6),transparent 70%);
+            opacity:0;transition:opacity .1s}
+
+        /* Toast */
+        #toast{
+            position:absolute;top:16px;left:50%;z-index:7;
+            transform:translateX(-50%) translateY(-80px);opacity:0;
+            background:rgba(8,12,26,0.93);color:#fff;padding:10px 24px;border-radius:24px;
+            font-size:.88em;font-weight:600;border:1px solid var(--accent);
+            box-shadow:0 4px 24px rgba(0,0,0,0.6);pointer-events:none;
+            transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .35s}
+        #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+        /* Steps */
+        #step-tracker{position:absolute;top:14px;left:14px;z-index:6;display:flex;flex-direction:column;gap:7px}
+        .sc{background:rgba(8,12,26,0.88);border:1px solid rgba(255,255,255,0.12);border-radius:10px;
+            padding:7px 12px;font-size:.78em;display:flex;align-items:center;gap:7px;
+            transition:all .3s;opacity:.5}
+        .sc.active{border-color:var(--accent2);opacity:1;box-shadow:0 0 12px var(--glow-gold);transform:scale(1.04)}
+        .sc.done{border-color:var(--green);opacity:.8}
+        .sc .dot{width:9px;height:9px;border-radius:50%;background:#444;flex-shrink:0}
+        .sc.active .dot{background:var(--accent2);animation:blink .8s infinite}
+        .sc.done .dot{background:var(--green)}
+        @keyframes blink{50%{opacity:.3}}
+
+        /* Damage report */
+        #damage-report{
+            position:absolute;top:50%;left:50%;z-index:8;
+            transform:translate(-50%,-50%) scale(.7);opacity:0;pointer-events:none;
+            background:linear-gradient(160deg,rgba(16,20,42,0.98),rgba(8,10,26,0.98));
+            border:2px solid var(--accent);border-radius:20px;padding:22px 28px;
+            min-width:360px;max-width:460px;
+            box-shadow:0 12px 60px rgba(0,0,0,0.7),0 0 40px rgba(233,69,96,0.15);
+            transition:transform .45s cubic-bezier(.34,1.56,.64,1),opacity .4s;text-align:center}
+        #damage-report.show{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto}
+        #report-title{font-size:1.5em;margin-bottom:10px}
+        #house-viz{height:120px;margin:8px 0 12px;position:relative;overflow:hidden;border-radius:10px;background:linear-gradient(180deg,#1a2040 0%,#0e1428 100%)}
+        #house-canvas{width:100%;height:100%}
+        #report-text{font-size:.85em;line-height:1.7;text-align:left;background:rgba(0,0,0,0.3);padding:12px 14px;border-radius:10px}
+        #report-text b{color:var(--accent2)}
+        .rbar-track{height:12px;background:rgba(0,0,0,0.5);border-radius:6px;overflow:hidden;margin:4px 0 8px}
+        .rbar-fill{height:100%;border-radius:6px;width:0;transition:width 1.2s cubic-bezier(.22,1,.36,1)}
+        #close-report{margin-top:14px;padding:9px 28px;background:var(--accent);border:none;border-radius:8px;
+            color:white;font-size:.92em;cursor:pointer;font-weight:700;transition:transform .12s}
+        #close-report:hover{transform:scale(1.06)}
+
+        /* Instructions */
+        #instructions{
+            position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9;
+            background:linear-gradient(160deg,rgba(16,20,42,0.98),rgba(8,10,26,0.98));
+            border:2px solid var(--accent);border-radius:20px;padding:28px 32px;max-width:460px;
+            box-shadow:0 12px 60px rgba(0,0,0,0.7);text-align:center}
+        #instructions h2{color:var(--accent);margin-bottom:6px;font-size:1.55em}
+        #instructions .intro{color:#889;font-size:.82em;margin-bottom:14px}
+        .ist{background:rgba(233,69,96,0.06);border-radius:10px;padding:9px 14px;margin:7px 0;
+            text-align:left;display:flex;align-items:center;gap:12px;font-size:.88em}
+        .ist .num{background:var(--accent);color:white;width:24px;height:24px;border-radius:50%;
+            display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:.85em}
+        #dismiss-btn{
+            margin-top:16px;padding:12px 36px;background:linear-gradient(135deg,var(--accent),#a3233a);
+            border:none;border-radius:10px;color:white;font-size:1em;font-weight:700;
+            cursor:pointer;transition:transform .15s;box-shadow:0 4px 18px var(--glow-accent)}
+        #dismiss-btn:hover{transform:scale(1.06)}
+
+        .marker-label{background:rgba(0,0,0,0.8);color:white;padding:2px 7px;border-radius:5px;font-size:11px;font-weight:700;white-space:nowrap}
+        .map-msg{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;
+            color:var(--accent);font-size:1.1em;padding:40px;text-align:center;gap:14px}
+        .map-msg .spin{width:36px;height:36px;border:3px solid rgba(233,69,96,0.2);
+            border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
     </style>
 </head>
 <body>
-    <div id="app">
-        <div id="controls">
-            <div id="title-wrap">
-                <h1><span class="emoji">💨</span> FART SIM 3000</h1>
-                <p class="subtitle">Neighborhood Demolition Edition</p>
-            </div>
+<div id="app">
+    <div id="controls">
+        <canvas id="panel-bg-canvas"></canvas>
 
-            <!-- Animated character -->
-            <div id="character-stage">
-                <div id="power-float">Power: <span id="power-pct">12</span>%</div>
-                <svg id="character-svg" viewBox="0 0 120 130">
-                    <g id="char-body">
-                        <!-- legs -->
-                        <rect x="44" y="100" width="10" height="22" rx="5" fill="#3b5998"/>
-                        <rect x="66" y="100" width="10" height="22" rx="5" fill="#3b5998"/>
-                        <!-- body -->
-                        <ellipse cx="60" cy="80" rx="32" ry="30" fill="#ff7a8c"/>
-                        <!-- belly -->
-                        <ellipse cx="60" cy="84" rx="22" ry="20" fill="#ffd1d8"/>
-                        <!-- arms -->
-                        <ellipse class="cheek" cx="28" cy="76" rx="9" ry="14" fill="#ff7a8c"/>
-                        <ellipse class="cheek" cx="92" cy="76" rx="9" ry="14" fill="#ff7a8c"/>
-                        <!-- head -->
-                        <circle cx="60" cy="38" r="26" fill="#ffb3bd"/>
-                        <!-- eyes -->
-                        <circle cx="51" cy="34" r="4.5" fill="#222"/>
-                        <circle cx="69" cy="34" r="4.5" fill="#222"/>
-                        <circle cx="52.5" cy="32.5" r="1.5" fill="#fff"/>
-                        <circle cx="70.5" cy="32.5" r="1.5" fill="#fff"/>
-                        <!-- eyebrows (concentration) -->
-                        <rect id="brow-l" x="45" y="25" width="11" height="3" rx="1.5" fill="#a0522d"/>
-                        <rect id="brow-r" x="64" y="25" width="11" height="3" rx="1.5" fill="#a0522d"/>
-                        <!-- mouth -->
-                        <path id="mouth" d="M 52 46 Q 60 52 68 46" stroke="#a0522d" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-                        <!-- cheeks blush -->
-                        <circle cx="44" cy="42" r="4" fill="rgba(255,100,120,0.4)"/>
-                        <circle cx="76" cy="42" r="4" fill="rgba(255,100,120,0.4)"/>
-                    </g>
-                </svg>
-                <div id="charge-ring"></div>
-            </div>
-
-            <!-- Velocity -->
-            <div class="control-group">
-                <label>
-                    <span><span class="label-icon">🚀</span>Velocity</span>
-                    <span class="value-display"><span id="velocity-display">50</span> m/s</span>
-                </label>
-                <input type="range" id="velocity" min="1" max="500" value="50">
-                <div class="meter"><div class="meter-fill" id="velocity-meter"></div></div>
-            </div>
-
-            <!-- Volume -->
-            <div class="control-group">
-                <label>
-                    <span><span class="label-icon">🔊</span>Volume</span>
-                    <span class="value-display"><span id="volume-display">80</span> dB</span>
-                </label>
-                <input type="range" id="volume" min="10" max="200" value="80">
-                <div class="meter"><div class="meter-fill" id="volume-meter"></div></div>
-            </div>
-
-            <!-- Duration -->
-            <div class="control-group">
-                <label>
-                    <span><span class="label-icon">⏱️</span>Duration</span>
-                    <span class="value-display"><span id="duration-display">2.0</span> s</span>
-                </label>
-                <input type="range" id="duration" min="1" max="100" value="20" step="1">
-                <div class="meter"><div class="meter-fill" id="duration-meter"></div></div>
-            </div>
-
-            <!-- Diet -->
-            <div class="control-group">
-                <label><span><span class="label-icon">🍽️</span>Diet Boost</span></label>
-                <div id="diet-pills">
-                    <div class="diet-pill" data-diet="0" title="Salad">🥗</div>
-                    <div class="diet-pill active" data-diet="1" title="Beans">🫘</div>
-                    <div class="diet-pill" data-diet="2" title="Chili Dog">🌭</div>
-                    <div class="diet-pill" data-diet="3" title="Mega Burrito">🌯</div>
-                    <div class="diet-pill" data-diet="4" title="Nuclear Curry">🍛</div>
-                </div>
-                <div class="diet-name" id="diet-display">Beans</div>
-            </div>
-
-            <!-- Stats -->
-            <div id="stats-box">
-                <div class="stat"><span>💥 Blast Radius</span><span class="stat-value" id="blast-radius-stat">25 m</span></div>
-                <div class="stat"><span>🦵 Destructive Force</span><span class="stat-value" id="force-stat">1,200 N</span></div>
-                <div class="stat"><span>📊 Fart Richter Scale</span><span class="stat-value" id="richter-stat">2.1</span></div>
-                <div class="stat"><span>🏠 Can Destroy House</span><span id="destroy-badge">Nope</span></div>
-            </div>
-
-            <button id="fire-btn">💨 RELEASE THE BEAST</button>
-            <p id="fire-hint">Hold to charge for maximum power</p>
-            <button id="reset-btn">↺ Reset Simulation</button>
+        <div class="title-row">
+            <h1><span class="wobble">💨</span> FART SIM 3000</h1>
+            <p class="subtitle">Neighborhood Demolition Edition</p>
         </div>
 
-        <div id="map-container">
-            <div id="map"></div>
-            <canvas id="fx-canvas"></canvas>
-            <div id="status-bar"></div>
-
-            <div id="step-tracker">
-                <div class="step-chip active" id="chip-1"><span class="dot"></span> 1. Place yourself</div>
-                <div class="step-chip" id="chip-2"><span class="dot"></span> 2. Mark Adam's house</div>
-                <div class="step-chip" id="chip-3"><span class="dot"></span> 3. Release the beast!</div>
-            </div>
-
-            <div id="damage-report">
-                <h3 id="report-title">Damage Report</h3>
-                <div id="house-viz">
-                    <svg id="house-svg" viewBox="0 0 200 100"></svg>
-                </div>
-                <div id="report-text"></div>
-                <button id="close-report">Close</button>
-            </div>
-
-            <div id="instructions">
-                <h2>💨 Fart Sim 3000</h2>
-                <p class="intro">The world's most advanced flatulence-based demolition simulator.</p>
-                <div class="step"><span class="num">1</span><span>Click the map to place <b>your position</b> (green)</span></div>
-                <div class="step"><span class="num">2</span><span>Click again to mark <b>Adam's house</b> (red)</span></div>
-                <div class="step"><span class="num">3</span><span>Tune velocity, volume, duration &amp; diet</span></div>
-                <div class="step"><span class="num">4</span><span>Hold <b>RELEASE THE BEAST</b> to charge, then let go!</span></div>
-                <button id="dismiss-instructions">Got it, let's rip! 💨</button>
-            </div>
+        <!-- Character stage with its own canvas for animated character -->
+        <div id="char-stage">
+            <canvas id="char-canvas"></canvas>
+            <div id="power-label">Power: <span id="power-pct">12</span>%</div>
+            <div id="charge-arc"><div id="charge-arc-fill"></div></div>
         </div>
+
+        <div class="cg">
+            <label><span>🚀 Velocity</span><span class="vd"><span id="velocity-display">50</span> m/s</span></label>
+            <input type="range" id="velocity" min="1" max="500" value="50">
+            <div class="meter"><div class="meter-fill" id="velocity-meter"></div></div>
+        </div>
+        <div class="cg">
+            <label><span>🔊 Volume</span><span class="vd"><span id="volume-display">80</span> dB</span></label>
+            <input type="range" id="volume" min="10" max="200" value="80">
+            <div class="meter"><div class="meter-fill" id="volume-meter"></div></div>
+        </div>
+        <div class="cg">
+            <label><span>⏱ Duration</span><span class="vd"><span id="duration-display">2.0</span> s</span></label>
+            <input type="range" id="duration" min="1" max="100" value="20" step="1">
+            <div class="meter"><div class="meter-fill" id="duration-meter"></div></div>
+        </div>
+        <div class="cg">
+            <label><span>🍽 Diet Boost</span></label>
+            <div id="diet-pills">
+                <div class="dp" data-diet="0" title="Salad">🥗</div>
+                <div class="dp active" data-diet="1" title="Beans">🫘</div>
+                <div class="dp" data-diet="2" title="Chili Dog">🌭</div>
+                <div class="dp" data-diet="3" title="Mega Burrito">🌯</div>
+                <div class="dp" data-diet="4" title="Nuclear Curry">🍛</div>
+            </div>
+            <div class="diet-name" id="diet-display">Beans</div>
+        </div>
+
+        <div id="stats-box">
+            <div class="stat"><span>💥 Blast Radius</span><span class="stat-val" id="blast-radius-stat">25 m</span></div>
+            <div class="stat"><span>🦵 Force</span><span class="stat-val" id="force-stat">1,200 N</span></div>
+            <div class="stat"><span>📊 Richter</span><span class="stat-val" id="richter-stat">2.1</span></div>
+            <div class="stat"><span>🏠 Destroy?</span><span id="destroy-badge">Nope</span></div>
+        </div>
+
+        <button id="fire-btn">💨 RELEASE THE BEAST</button>
+        <p class="fire-hint">Hold to charge &middot; release to fire</p>
+        <button id="reset-btn">↺ Reset</button>
     </div>
 
-    <script>
-        // ========== SIMULATION ENGINE ==========
-        const DIETS = ['Salad', 'Beans', 'Chili Dog', 'Mega Burrito', 'Nuclear Curry'];
-        const DIET_MULTIPLIERS = [0.5, 1.0, 2.0, 4.0, 8.0];
-        const HOUSE_DESTROY_THRESHOLD = 50000;
+    <div id="map-container">
+        <div id="map"></div>
+        <div id="flash-overlay"></div>
+        <canvas id="fx-canvas"></canvas>
+        <div id="toast"></div>
+        <div id="step-tracker">
+            <div class="sc active" id="chip-1"><span class="dot"></span>1. Place yourself</div>
+            <div class="sc" id="chip-2"><span class="dot"></span>2. Mark Adam's house</div>
+            <div class="sc" id="chip-3"><span class="dot"></span>3. Release the beast!</div>
+        </div>
+        <div id="damage-report">
+            <h3 id="report-title">Damage Report</h3>
+            <div id="house-viz"><canvas id="house-canvas"></canvas></div>
+            <div id="report-text"></div>
+            <button id="close-report">Dismiss</button>
+        </div>
+        <div id="instructions">
+            <h2>💨 Fart Sim 3000</h2>
+            <p class="intro">The world's most advanced flatulence-based demolition simulator.</p>
+            <div class="ist"><span class="num">1</span><span>Click the map to place <b>your position</b></span></div>
+            <div class="ist"><span class="num">2</span><span>Click again to mark <b>Adam's house</b></span></div>
+            <div class="ist"><span class="num">3</span><span>Tune velocity, volume, duration &amp; diet</span></div>
+            <div class="ist"><span class="num">4</span><span><b>Hold</b> the button to charge, then <b>release</b>!</span></div>
+            <button id="dismiss-btn">Got it, let's rip! 💨</button>
+        </div>
+    </div>
+</div>
 
-        let playerPos = null;
-        let adamPos = null;
-        let map = null;
-        let playerMarker = null;
-        let adamMarker = null;
-        let blastCircle = null;
-        let clickMode = 'player';
-        let animationId = null;
-        let dietIndex = 1;
-        let chargeBoost = 1;
+<script>
+// ============================================================
+//  SIMULATION ENGINE
+// ============================================================
+const DIETS = ['Salad','Beans','Chili Dog','Mega Burrito','Nuclear Curry'];
+const DIET_MULT = [0.5, 1, 2, 4, 8];
+const DESTROY_THRESH = 50000;
 
-        function calcBlastRadius(velocity, volume, duration, di) {
-            return (velocity * 0.3 + volume * 0.15) * (duration / 10) * DIET_MULTIPLIERS[di];
-        }
-        function calcForce(velocity, volume, duration, di) {
-            return velocity * volume * (duration / 10) * DIET_MULTIPLIERS[di] * 1.5;
-        }
-        function calcRichter(force) {
-            return Math.max(0, Math.log10(force + 1) * 1.2).toFixed(1);
-        }
-        function getForceAtDistance(totalForce, blastRadius, distance) {
-            if (distance <= 0) return totalForce;
-            if (distance >= blastRadius) return 0;
-            return totalForce * Math.pow(1 - (distance / blastRadius), 2);
-        }
-        function getDestructionLevel(f) {
-            if (f >= HOUSE_DESTROY_THRESHOLD * 2) return { level: 'OBLITERATED', emoji: '💀', color: '#8e44ad', pct: 100 };
-            if (f >= HOUSE_DESTROY_THRESHOLD) return { level: 'DESTROYED', emoji: '🏚️', color: '#e74c3c', pct: 95 };
-            if (f >= HOUSE_DESTROY_THRESHOLD * 0.7) return { level: 'SEVERE DAMAGE', emoji: '🔥', color: '#e67e22', pct: 75 };
-            if (f >= HOUSE_DESTROY_THRESHOLD * 0.4) return { level: 'MODERATE DAMAGE', emoji: '💨', color: '#f1c40f', pct: 50 };
-            if (f >= HOUSE_DESTROY_THRESHOLD * 0.15) return { level: 'MINOR DAMAGE', emoji: '😬', color: '#2ecc71', pct: 25 };
-            return { level: 'NO EFFECT', emoji: '😂', color: '#3498db', pct: 5 };
-        }
+let playerPos=null, adamPos=null, map=null, playerMarker=null, adamMarker=null;
+let blastCircle=null, clickMode='player', animId=null, dietIdx=1, chargeBoost=1;
 
-        // ========== UI UPDATES ==========
-        function getValues() {
-            return {
-                velocity: parseInt(document.getElementById('velocity').value),
-                volume: parseInt(document.getElementById('volume').value),
-                duration: parseInt(document.getElementById('duration').value),
-                diet: dietIndex,
-            };
-        }
+const blastR = (v,vol,d,di)=> (v*0.3+vol*0.15)*(d/10)*DIET_MULT[di];
+const force  = (v,vol,d,di)=> v*vol*(d/10)*DIET_MULT[di]*1.5;
+const richter= f=> Math.max(0, Math.log10(f+1)*1.2).toFixed(1);
+function forceAt(F,R,dist){ return dist<=0?F: dist>=R?0: F*Math.pow(1-dist/R,2); }
+function destructionLevel(f){
+    if(f>=DESTROY_THRESH*2)  return{level:'OBLITERATED',emoji:'💀',color:'#8e44ad',pct:100};
+    if(f>=DESTROY_THRESH)    return{level:'DESTROYED',emoji:'🏚️',color:'#e74c3c',pct:95};
+    if(f>=DESTROY_THRESH*.7) return{level:'SEVERE DAMAGE',emoji:'🔥',color:'#e67e22',pct:75};
+    if(f>=DESTROY_THRESH*.4) return{level:'MODERATE DAMAGE',emoji:'💨',color:'#f1c40f',pct:50};
+    if(f>=DESTROY_THRESH*.15)return{level:'MINOR DAMAGE',emoji:'😬',color:'#2ecc71',pct:25};
+    return{level:'NO EFFECT',emoji:'😂',color:'#3498db',pct:5};
+}
 
-        function flashStat(el) {
-            el.classList.remove('flash');
-            void el.offsetWidth;
-            el.classList.add('flash');
-        }
+// ============================================================
+//  UI
+// ============================================================
+const $=id=>document.getElementById(id);
+function vals(){return{v:+$('velocity').value,vol:+$('volume').value,dur:+$('duration').value,di:dietIdx}}
 
-        function updateStats() {
-            const v = getValues();
-            const radius = calcBlastRadius(v.velocity, v.volume, v.duration, v.diet);
-            const force = calcForce(v.velocity, v.volume, v.duration, v.diet);
-            const richter = calcRichter(force);
+function updateStats(){
+    const{v,vol,dur,di}=vals();
+    const R=blastR(v,vol,dur,di), F=force(v,vol,dur,di), r=richter(F);
+    $('velocity-display').textContent=v;
+    $('volume-display').textContent=vol;
+    $('duration-display').textContent=(dur/10).toFixed(1);
+    $('diet-display').textContent=DIETS[di];
+    $('velocity-meter').style.width=(v/500*100)+'%';
+    $('volume-meter').style.width=((vol-10)/190*100)+'%';
+    $('duration-meter').style.width=(dur/100*100)+'%';
+    $('blast-radius-stat').textContent=R.toFixed(0)+' m';
+    $('force-stat').textContent=F.toLocaleString(undefined,{maximumFractionDigits:0})+' N';
+    $('richter-stat').textContent=r;
+    $('power-pct').textContent=Math.min(100,Math.round(r/8*100));
+    const can=F>=DESTROY_THRESH, b=$('destroy-badge');
+    b.textContent=can?'YES! 💪':'Nope';
+    b.style.background=can?'rgba(46,204,113,0.25)':'rgba(231,76,60,0.2)';
+    b.style.color=can?'#2ecc71':'#e74c3c';
+}
 
-            document.getElementById('velocity-display').textContent = v.velocity;
-            document.getElementById('volume-display').textContent = v.volume;
-            document.getElementById('duration-display').textContent = (v.duration / 10).toFixed(1);
-            document.getElementById('diet-display').textContent = DIETS[v.diet];
+// ============================================================
+//  PANEL AMBIENT PARTICLES
+// ============================================================
+const panelC=$('panel-bg-canvas'), panelCtx=panelC.getContext('2d');
+let panelParts=[];
+function sizePanelC(){panelC.width=350;panelC.height=window.innerHeight}
+sizePanelC(); window.addEventListener('resize',sizePanelC);
+for(let i=0;i<25;i++) panelParts.push({x:Math.random()*350,y:Math.random()*innerHeight,
+    r:1+Math.random()*2.5,vy:-.15-Math.random()*.3,vx:(Math.random()-.5)*.2,a:.15+Math.random()*.25});
+(function panelLoop(){
+    panelCtx.clearRect(0,0,panelC.width,panelC.height);
+    panelParts.forEach(p=>{
+        p.x+=p.vx; p.y+=p.vy;
+        if(p.y<-10){p.y=panelC.height+10;p.x=Math.random()*350}
+        panelCtx.beginPath();panelCtx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        panelCtx.fillStyle=`rgba(233,69,96,${p.a})`;panelCtx.fill();
+    });
+    requestAnimationFrame(panelLoop);
+})();
 
-            document.getElementById('velocity-meter').style.width = (v.velocity / 500 * 100) + '%';
-            document.getElementById('volume-meter').style.width = ((v.volume - 10) / 190 * 100) + '%';
-            document.getElementById('duration-meter').style.width = (v.duration / 100 * 100) + '%';
+// ============================================================
+//  ANIMATED CHARACTER (canvas)
+// ============================================================
+const charC=$('char-canvas'), cctx=charC.getContext('2d');
+let charState={phase:0,charging:false,released:false,releaseT:0,sweat:[]};
+function sizeCharC(){charC.width=charC.offsetWidth*2;charC.height=charC.offsetHeight*2;cctx.scale(2,2)}
+sizeCharC(); window.addEventListener('resize',sizeCharC);
 
-            document.getElementById('blast-radius-stat').textContent = radius.toFixed(0) + ' m';
-            document.getElementById('force-stat').textContent = force.toLocaleString(undefined, {maximumFractionDigits: 0}) + ' N';
-            document.getElementById('richter-stat').textContent = richter;
+function drawChar(t){
+    const W=charC.width/2, H=charC.height/2;
+    cctx.clearRect(0,0,W,H);
+    const cx=W/2, by=H-18;
+    const bob=charState.charging? Math.sin(t*18)*1.5 : Math.sin(t*2.5)*3;
+    const squash=charState.charging? 1+Math.sin(t*16)*.03 : 1;
+    const stretchY=charState.charging? 1-Math.sin(t*16)*.03 : 1;
 
-            // Power float on character (normalized roughly to a 0-100 feel)
-            const powerPct = Math.min(100, Math.round(calcRichter(force) / 8 * 100));
-            document.getElementById('power-pct').textContent = powerPct;
+    cctx.save(); cctx.translate(cx, by+bob);
 
-            const canDestroy = force >= HOUSE_DESTROY_THRESHOLD;
-            const badge = document.getElementById('destroy-badge');
-            badge.textContent = canDestroy ? 'YES! 💪' : 'Nope';
-            badge.style.background = canDestroy ? 'rgba(46,204,113,0.25)' : 'rgba(231,76,60,0.2)';
-            badge.style.color = canDestroy ? '#2ecc71' : '#e74c3c';
-        }
-
-        // ========== GOOGLE MAPS ==========
-        function initMap() {
-            const defaultCenter = { lat: 37.7749, lng: -122.4194 };
-            map = new google.maps.Map(document.getElementById('map'), {
-                center: defaultCenter,
-                zoom: 18,
-                mapTypeId: 'satellite',
-                tilt: 0,
-                disableDefaultUI: false,
-                zoomControl: true,
-                mapTypeControl: true,
-                streetViewControl: false,
-                fullscreenControl: false,
-            });
-
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => map.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-                    () => {}
-                );
+    // Gas cloud behind character when released
+    if(charState.released){
+        const age=(t-charState.releaseT);
+        if(age<3){
+            for(let i=0;i<6;i++){
+                const ga=.5-age/6;
+                const gx=-20-age*12-i*8+Math.sin(t*3+i)*6;
+                const gy=-30+Math.sin(t*4+i*2)*10;
+                const gr=8+age*6+i*3;
+                cctx.globalAlpha=Math.max(0,ga);
+                const grad=cctx.createRadialGradient(gx,gy,0,gx,gy,gr);
+                grad.addColorStop(0,'rgba(120,180,60,0.5)');grad.addColorStop(1,'rgba(90,150,30,0)');
+                cctx.fillStyle=grad;cctx.beginPath();cctx.arc(gx,gy,gr,0,Math.PI*2);cctx.fill();
             }
-
-            map.addListener('click', (e) => {
-                const pos = { lat: e.latLng.lat(), lng: e.latLng.lng() };
-                if (clickMode === 'player') {
-                    setPlayerPosition(pos);
-                    clickMode = 'adam';
-                    setStep(2);
-                    showStatus("👍 Now click on Adam's house!");
-                } else {
-                    setAdamPosition(pos);
-                    clickMode = 'player';
-                    setStep(3);
-                    showStatus('🎯 Locked on! Tune your weapon and fire!');
-                    setTimeout(hideStatus, 3000);
-                }
-            });
-            sizeCanvas();
+            cctx.globalAlpha=1;
         }
+    }
 
-        function setPlayerPosition(pos) {
-            playerPos = pos;
-            if (playerMarker) playerMarker.setMap(null);
-            playerMarker = new google.maps.Marker({
-                position: pos, map: map,
-                icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#2ecc71', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2, scale: 12 },
-                label: { text: 'YOU', className: 'marker-label' }, title: 'Your Position',
-            });
-        }
-        function setAdamPosition(pos) {
-            adamPos = pos;
-            if (adamMarker) adamMarker.setMap(null);
-            adamMarker = new google.maps.Marker({
-                position: pos, map: map,
-                icon: { path: google.maps.SymbolPath.CIRCLE, fillColor: '#e74c3c', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2, scale: 12 },
-                label: { text: "ADAM'S", className: 'marker-label' }, title: "Adam's House",
-            });
-        }
-        function getDistanceMeters(p1, p2) {
-            return google.maps.geometry.spherical.computeDistanceBetween(
-                new google.maps.LatLng(p1.lat, p1.lng), new google.maps.LatLng(p2.lat, p2.lng));
-        }
+    cctx.scale(squash,stretchY);
 
-        // ========== STEP TRACKER ==========
-        function setStep(n) {
-            for (let i = 1; i <= 3; i++) {
-                const chip = document.getElementById('chip-' + i);
-                chip.classList.remove('active', 'done');
-                if (i < n) chip.classList.add('done');
-                else if (i === n) chip.classList.add('active');
-            }
-        }
+    // Legs
+    cctx.fillStyle='#3b5998';
+    cctx.beginPath();cctx.ellipse(-10,0,5,12,0,0,Math.PI*2);cctx.fill();
+    cctx.beginPath();cctx.ellipse(10,0,5,12,0,0,Math.PI*2);cctx.fill();
 
-        // ========== PARTICLE FX CANVAS ==========
-        const fxCanvas = document.getElementById('fx-canvas');
-        const fxCtx = fxCanvas.getContext('2d');
-        let particles = [];
+    // Body
+    cctx.fillStyle='#ff7a8c';
+    cctx.beginPath();cctx.ellipse(0,-30,30,28,0,0,Math.PI*2);cctx.fill();
+    // Belly
+    cctx.fillStyle='#ffd1d8';
+    cctx.beginPath();cctx.ellipse(0,-26,20,18,0,0,Math.PI*2);cctx.fill();
 
-        function sizeCanvas() {
-            fxCanvas.width = fxCanvas.offsetWidth;
-            fxCanvas.height = fxCanvas.offsetHeight;
-        }
-        window.addEventListener('resize', sizeCanvas);
+    // Arms
+    const armPuff=charState.charging? 1+Math.sin(t*14)*.1 : 1;
+    cctx.fillStyle='#ff7a8c';
+    cctx.beginPath();cctx.ellipse(-32,-32,8*armPuff,13,-.2,0,Math.PI*2);cctx.fill();
+    cctx.beginPath();cctx.ellipse(32,-32,8*armPuff,13,.2,0,Math.PI*2);cctx.fill();
 
-        function latLngToPixel(latLng) {
-            // Project a LatLng to container pixels using the map projection
-            const proj = map.getProjection();
-            if (!proj) return null;
-            const bounds = map.getBounds();
-            const ne = bounds.getNorthEast();
-            const sw = bounds.getSouthWest();
-            const topRight = proj.fromLatLngToPoint(ne);
-            const bottomLeft = proj.fromLatLngToPoint(sw);
-            const scale = Math.pow(2, map.getZoom());
-            const worldPoint = proj.fromLatLngToPoint(new google.maps.LatLng(latLng.lat, latLng.lng));
-            return {
-                x: (worldPoint.x - bottomLeft.x) * scale,
-                y: (worldPoint.y - topRight.y) * scale,
-            };
-        }
+    // Head
+    const headY=-62;
+    cctx.fillStyle='#ffb3bd';
+    cctx.beginPath();cctx.arc(0,headY,24,0,Math.PI*2);cctx.fill();
 
-        function spawnGasParticles(origin, count, power) {
-            for (let i = 0; i < count; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const speed = 1 + Math.random() * (2 + power * 0.5);
-                particles.push({
-                    x: origin.x, y: origin.y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed - 0.5,
-                    life: 1,
-                    decay: 0.008 + Math.random() * 0.012,
-                    size: 6 + Math.random() * 14,
-                    hue: 70 + Math.random() * 40, // green-yellow gas
-                });
-            }
-        }
+    // Blush
+    cctx.globalAlpha=charState.charging?.6:.3;
+    cctx.fillStyle='#ff6080';
+    cctx.beginPath();cctx.arc(-15,headY+8,4.5,0,Math.PI*2);cctx.fill();
+    cctx.beginPath();cctx.arc(15,headY+8,4.5,0,Math.PI*2);cctx.fill();
+    cctx.globalAlpha=1;
 
-        function spawnDebris(origin, count) {
-            for (let i = 0; i < count; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const speed = 3 + Math.random() * 8;
-                particles.push({
-                    x: origin.x, y: origin.y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed - 4,
-                    life: 1, decay: 0.012 + Math.random() * 0.01,
-                    size: 3 + Math.random() * 6,
-                    debris: true, gravity: 0.25,
-                    color: ['#8B4513','#a0522d','#c0392b','#666'][Math.floor(Math.random()*4)],
-                });
-            }
-        }
+    // Eyes
+    const eyeY=headY-3;
+    const eyeScale=charState.charging? .7 : 1;
+    cctx.fillStyle='#222';
+    cctx.beginPath();cctx.ellipse(-9,eyeY,4*eyeScale,4.5*eyeScale,0,0,Math.PI*2);cctx.fill();
+    cctx.beginPath();cctx.ellipse(9,eyeY,4*eyeScale,4.5*eyeScale,0,0,Math.PI*2);cctx.fill();
+    cctx.fillStyle='#fff';
+    cctx.beginPath();cctx.arc(-7.5,eyeY-1.5,1.5,0,Math.PI*2);cctx.fill();
+    cctx.beginPath();cctx.arc(10.5,eyeY-1.5,1.5,0,Math.PI*2);cctx.fill();
 
-        let fxRunning = false;
-        function runFx() {
-            if (fxRunning) return;
-            fxRunning = true;
-            (function frame() {
-                fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
-                for (let i = particles.length - 1; i >= 0; i--) {
-                    const p = particles[i];
-                    p.x += p.vx; p.y += p.vy;
-                    if (p.gravity) p.vy += p.gravity; else p.vy -= 0.02;
-                    p.vx *= 0.99;
-                    p.life -= p.decay;
-                    if (p.life <= 0) { particles.splice(i, 1); continue; }
-                    fxCtx.globalAlpha = Math.max(0, p.life);
-                    if (p.debris) {
-                        fxCtx.fillStyle = p.color;
-                        fxCtx.fillRect(p.x, p.y, p.size, p.size);
-                    } else {
-                        const g = fxCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
-                        g.addColorStop(0, `hsla(${p.hue},70%,55%,0.6)`);
-                        g.addColorStop(1, `hsla(${p.hue},70%,45%,0)`);
-                        fxCtx.fillStyle = g;
-                        fxCtx.beginPath();
-                        fxCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                        fxCtx.fill();
-                    }
-                }
-                fxCtx.globalAlpha = 1;
-                if (particles.length > 0) {
-                    requestAnimationFrame(frame);
-                } else {
-                    fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
-                    fxRunning = false;
-                }
-            })();
-        }
+    // Eyebrows
+    cctx.strokeStyle='#a0522d';cctx.lineWidth=2.5;cctx.lineCap='round';
+    const browAngle=charState.charging?.25:0;
+    cctx.save();cctx.translate(-9,eyeY-9);cctx.rotate(-browAngle);
+    cctx.beginPath();cctx.moveTo(-6,0);cctx.lineTo(6,0);cctx.stroke();cctx.restore();
+    cctx.save();cctx.translate(9,eyeY-9);cctx.rotate(browAngle);
+    cctx.beginPath();cctx.moveTo(-6,0);cctx.lineTo(6,0);cctx.stroke();cctx.restore();
 
-        // ========== CHARACTER ANIMATION ==========
-        const charStage = document.getElementById('character-stage');
-        const chargeRing = document.getElementById('charge-ring');
-        let charging = false;
-        let chargeStart = 0;
+    // Mouth
+    cctx.strokeStyle='#a0522d';cctx.lineWidth=2.5;
+    cctx.beginPath();
+    if(charState.charging){
+        cctx.moveTo(-6,headY+12);cctx.quadraticCurveTo(0,headY+8,6,headY+12);
+    } else if(charState.released && (t-charState.releaseT)<1.5){
+        cctx.moveTo(-10,headY+10);cctx.quadraticCurveTo(0,headY+20,10,headY+10);
+    } else {
+        cctx.moveTo(-7,headY+12);cctx.quadraticCurveTo(0,headY+17,7,headY+12);
+    }
+    cctx.stroke();
 
-        function startCharge() {
-            charging = true;
-            chargeStart = Date.now();
-            charStage.classList.add('charging');
-            document.getElementById('fire-btn').classList.add('charging');
-            document.getElementById('mouth').setAttribute('d', 'M 54 48 Q 60 44 66 48'); // tense mouth
-            (function chargeFrame() {
-                if (!charging) return;
-                const held = Math.min((Date.now() - chargeStart) / 2000, 1);
-                chargeBoost = 1 + held * 1.5; // up to 2.5x
-                chargeRing.style.boxShadow = `inset 0 0 ${held * 30}px ${held * 8}px rgba(255,177,66,${held * 0.7})`;
-                // cheeks puff
-                const puff = 1 + held * 0.5;
-                document.querySelectorAll('.cheek').forEach(c => c.style.transform = `scale(${puff})`);
-                requestAnimationFrame(chargeFrame);
-            })();
-        }
-
-        function releaseCharge() {
-            if (!charging) return;
-            charging = false;
-            charStage.classList.remove('charging');
-            document.getElementById('fire-btn').classList.remove('charging');
-            chargeRing.style.boxShadow = 'inset 0 0 0 0 var(--accent2)';
-            document.querySelectorAll('.cheek').forEach(c => c.style.transform = '');
-            document.getElementById('mouth').setAttribute('d', 'M 50 46 Q 60 56 70 46'); // big relief grin
-            setTimeout(() => document.getElementById('mouth').setAttribute('d', 'M 52 46 Q 60 52 68 46'), 800);
-            fireBlast();
-        }
-
-        // ========== BLAST ==========
-        function fireBlast() {
-            if (!playerPos) { showStatus('👇 Click the map to place yourself first!'); setTimeout(hideStatus, 2200); chargeBoost = 1; return; }
-            if (!adamPos) { showStatus("👇 Click the map to mark Adam's house!"); setTimeout(hideStatus, 2200); chargeBoost = 1; return; }
-
-            const v = getValues();
-            const boost = chargeBoost;
-            const blastRadius = calcBlastRadius(v.velocity, v.volume, v.duration, v.diet) * boost;
-            const totalForce = calcForce(v.velocity, v.volume, v.duration, v.diet) * boost;
-            const distance = getDistanceMeters(playerPos, adamPos);
-            const forceAtAdam = getForceAtDistance(totalForce, blastRadius, distance);
-            const destruction = getDestructionLevel(forceAtAdam);
-
-            playFartSound(v.velocity, v.volume, v.duration / 10, v.diet);
-
-            // Gas particles burst from player position
-            const originPx = latLngToPixel(playerPos);
-            if (originPx) {
-                spawnGasParticles(originPx, 40 + Math.round(v.volume / 2), DIET_MULTIPLIERS[v.diet]);
-                runFx();
-            }
-
-            chargeBoost = 1;
-            animateBlast(blastRadius, totalForce, distance, forceAtAdam, destruction);
-        }
-
-        function animateBlast(blastRadius, totalForce, distance, forceAtAdam, destruction) {
-            if (blastCircle) blastCircle.setMap(null);
-            let currentRadius = 0;
-            const steps = 60;
-            const increment = blastRadius / steps;
-            let step = 0;
-            let debrisFired = false;
-            shakeScreen(calcRichter(totalForce));
-
-            function animate() {
-                step++;
-                currentRadius = Math.min(currentRadius + increment, blastRadius);
-                if (blastCircle) blastCircle.setMap(null);
-                const opacity = Math.max(0.1, 0.5 - (step / steps) * 0.4);
-                const reachedAdam = currentRadius >= distance;
-
-                blastCircle = new google.maps.Circle({
-                    center: playerPos, radius: currentRadius, map: map,
-                    fillColor: reachedAdam ? '#e74c3c' : '#8B4513',
-                    fillOpacity: opacity, strokeColor: '#e94560',
-                    strokeWeight: 2, strokeOpacity: opacity + 0.2,
-                });
-
-                // When wave hits Adam's, blow debris from his house
-                if (reachedAdam && !debrisFired && destruction.pct > 25) {
-                    debrisFired = true;
-                    const adamPx = latLngToPixel(adamPos);
-                    if (adamPx) { spawnDebris(adamPx, Math.round(destruction.pct / 2)); runFx(); }
-                }
-
-                if (step < steps) animationId = requestAnimationFrame(animate);
-                else showDamageReport(destruction, distance, blastRadius, forceAtAdam, totalForce);
-            }
-            animate();
-        }
-
-        function shakeScreen(richter) {
-            const intensity = Math.min(richter * 2.5, 24);
-            const container = document.getElementById('map-container');
-            let s = 0; const max = 32;
-            (function shake() {
-                s++;
-                const decay = 1 - s / max;
-                container.style.transform = `translate(${(Math.random()-0.5)*intensity*decay}px, ${(Math.random()-0.5)*intensity*decay}px)`;
-                if (s < max) requestAnimationFrame(shake);
-                else container.style.transform = '';
-            })();
-        }
-
-        // ========== HOUSE DESTRUCTION SVG ==========
-        function drawHouse(destructionPct) {
-            const svg = document.getElementById('house-svg');
-            const intact = 100 - destructionPct;
-            // Build a house with crumbling based on damage
-            let html = '';
-            // ground
-            html += '<rect x="0" y="92" width="200" height="8" fill="#3a3a2a"/>';
-            if (intact > 5) {
-                // walls - lean/crack as damage rises
-                const lean = (destructionPct / 100) * 8;
-                const wallH = 40 * (intact / 100) + 20;
-                const wallY = 92 - wallH;
-                html += `<rect x="${60+lean*0.3}" y="${wallY}" width="80" height="${wallH}" fill="#d4a373" transform="rotate(${lean*0.2} 100 92)"/>`;
-                // roof (gone if heavily damaged)
-                if (destructionPct < 70) {
-                    html += `<polygon points="55,${wallY} 100,${wallY-28} 145,${wallY}" fill="#a0522d"/>`;
-                }
-                // door
-                html += `<rect x="90" y="72" width="20" height="20" fill="#6b4226"/>`;
-                // window
-                if (destructionPct < 50) html += `<rect x="68" y="${wallY+8}" width="14" height="14" fill="#aaccff"/>`;
-                // cracks
-                if (destructionPct > 25) html += `<path d="M 100 ${wallY} L 105 ${wallY+15} L 98 ${wallY+30}" stroke="#333" stroke-width="1.5" fill="none"/>`;
-            }
-            // rubble pile (grows with damage)
-            if (destructionPct > 25) {
-                const rubbleCount = Math.round(destructionPct / 10);
-                for (let i = 0; i < rubbleCount; i++) {
-                    const rx = 50 + Math.random() * 100;
-                    const rs = 4 + Math.random() * 8;
-                    html += `<rect x="${rx}" y="${88 - Math.random()*6}" width="${rs}" height="${rs}" fill="${['#d4a373','#a0522d','#888'][i%3]}" transform="rotate(${Math.random()*45} ${rx} 88)"/>`;
-                }
-            }
-            // smoke for severe
-            if (destructionPct >= 75) {
-                html += '<circle cx="90" cy="40" r="14" fill="rgba(120,120,120,0.4)"/>';
-                html += '<circle cx="110" cy="32" r="11" fill="rgba(120,120,120,0.3)"/>';
-                html += '<circle cx="100" cy="50" r="16" fill="rgba(120,120,120,0.35)"/>';
-            }
-            svg.innerHTML = html;
-        }
-
-        function showDamageReport(destruction, distance, blastRadius, forceAtAdam, totalForce) {
-            const report = document.getElementById('damage-report');
-            const title = document.getElementById('report-title');
-            const text = document.getElementById('report-text');
-
-            title.innerHTML = `${destruction.emoji} ${destruction.level} ${destruction.emoji}`;
-            title.style.color = destruction.color;
-
-            drawHouse(destruction.pct);
-
-            const pctReach = Math.min(100, (blastRadius / distance * 100)).toFixed(0);
-            const integrity = Math.max(0, 100 - destruction.pct);
-            let quip = '';
-            if (destruction.level === 'OBLITERATED') quip = "Adam's house has been vaporized. He needs new friends AND a new house.";
-            else if (destruction.level === 'DESTROYED') quip = "Adam's house is flattened. Insurance won't cover this.";
-            else if (destruction.level === 'NO EFFECT') quip = "Adam didn't even notice. Eat more beans.";
-            else quip = "Adam felt that one. Keep tuning!";
-
-            text.innerHTML = `
-                <b>Distance to Adam's:</b> ${distance.toFixed(1)} m<br>
-                <b>Blast radius:</b> ${blastRadius.toFixed(1)} m (${pctReach}% of distance)<br>
-                <b>Force at origin:</b> ${totalForce.toLocaleString(undefined,{maximumFractionDigits:0})} N<br>
-                <b>Force at Adam's:</b> ${forceAtAdam.toLocaleString(undefined,{maximumFractionDigits:0})} N
-                <div class="report-bars">
-                    <b>House Integrity:</b>
-                    <div class="report-bar-track"><div class="report-bar-fill" id="integrity-bar"></div></div>
-                </div>
-                <i style="color:${destruction.color}">${quip}</i>
-            `;
-
-            report.classList.add('show');
-            // animate integrity bar
-            setTimeout(() => {
-                const bar = document.getElementById('integrity-bar');
-                if (bar) {
-                    bar.style.width = integrity + '%';
-                    bar.style.background = integrity > 60 ? 'linear-gradient(90deg,#27ae60,#2ecc71)'
-                        : integrity > 25 ? 'linear-gradient(90deg,#e67e22,#f1c40f)'
-                        : 'linear-gradient(90deg,#8e44ad,#e74c3c)';
-                }
-            }, 100);
-        }
-
-        // ========== SOUND ENGINE ==========
-        function playFartSound(velocity, volume, durationSec, di) {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const duration = Math.min(durationSec, 5);
-            const osc1 = ctx.createOscillator();
-            osc1.type = 'sawtooth';
-            osc1.frequency.setValueAtTime(60 + di * 15, ctx.currentTime);
-            osc1.frequency.exponentialRampToValueAtTime(30 + velocity * 0.2, ctx.currentTime + duration);
-            const osc2 = ctx.createOscillator();
-            osc2.type = 'sine';
-            osc2.frequency.setValueAtTime(40, ctx.currentTime);
-            osc2.frequency.exponentialRampToValueAtTime(20, ctx.currentTime + duration);
-            const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * duration, ctx.sampleRate);
-            const nd = noiseBuffer.getChannelData(0);
-            for (let i = 0; i < nd.length; i++) nd[i] = (Math.random() * 2 - 1) * 0.3;
-            const noise = ctx.createBufferSource();
-            noise.buffer = noiseBuffer;
-            const lfo = ctx.createOscillator();
-            lfo.frequency.value = 8 + velocity * 0.05;
-            const lfoGain = ctx.createGain();
-            lfoGain.gain.value = 20 + volume * 0.3;
-            lfo.connect(lfoGain); lfoGain.connect(osc1.frequency);
-            const filter = ctx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.value = 200 + velocity * 2;
-            filter.Q.value = 5;
-            const gain = ctx.createGain();
-            const masterVol = Math.min(0.6, volume / 200 * 0.6);
-            gain.gain.setValueAtTime(masterVol, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
-            osc1.connect(filter); osc2.connect(filter); noise.connect(filter);
-            filter.connect(gain); gain.connect(ctx.destination);
-            osc1.start(); osc2.start(); noise.start(); lfo.start();
-            osc1.stop(ctx.currentTime + duration); osc2.stop(ctx.currentTime + duration);
-            noise.stop(ctx.currentTime + duration); lfo.stop(ctx.currentTime + duration);
-            setTimeout(() => ctx.close(), (duration + 1) * 1000);
-        }
-
-        // ========== STATUS ==========
-        function showStatus(msg) {
-            const bar = document.getElementById('status-bar');
-            bar.textContent = msg;
-            bar.classList.add('show');
-        }
-        function hideStatus() {
-            document.getElementById('status-bar').classList.remove('show');
-        }
-
-        // ========== EVENT LISTENERS ==========
-        ['velocity', 'volume', 'duration'].forEach(id => {
-            document.getElementById(id).addEventListener('input', updateStats);
+    // Sweat drops when charging
+    if(charState.charging){
+        cctx.fillStyle='rgba(100,180,255,0.7)';
+        [[-18,headY-8],[20,headY-5],[-14,headY+2]].forEach(([sx,sy],i)=>{
+            const dy=((t*3+i)%1)*12;
+            const a=1-((t*3+i)%1);
+            cctx.globalAlpha=a*.6;
+            cctx.beginPath();cctx.ellipse(sx,sy+dy,2,3,0,0,Math.PI*2);cctx.fill();
         });
+        cctx.globalAlpha=1;
+    }
 
-        // Diet pills
-        document.querySelectorAll('.diet-pill').forEach(pill => {
-            pill.addEventListener('click', () => {
-                document.querySelectorAll('.diet-pill').forEach(p => p.classList.remove('active'));
-                pill.classList.add('active');
-                dietIndex = parseInt(pill.dataset.diet);
-                updateStats();
-            });
-        });
+    cctx.restore();
+}
 
-        // Fire button - hold to charge
-        const fireBtn = document.getElementById('fire-btn');
-        fireBtn.addEventListener('mousedown', startCharge);
-        fireBtn.addEventListener('mouseup', releaseCharge);
-        fireBtn.addEventListener('mouseleave', () => { if (charging) releaseCharge(); });
-        fireBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startCharge(); });
-        fireBtn.addEventListener('touchend', (e) => { e.preventDefault(); releaseCharge(); });
+let charAnimT=0;
+(function charLoop(){
+    charAnimT+=1/60;
+    drawChar(charAnimT);
+    requestAnimationFrame(charLoop);
+})();
 
-        document.getElementById('close-report').addEventListener('click', () => {
-            document.getElementById('damage-report').classList.remove('show');
-        });
+// ============================================================
+//  MAP PARTICLE FX
+// ============================================================
+const fxC=$('fx-canvas'), fxCtx=fxC.getContext('2d');
+let particles=[];
+function sizeFx(){fxC.width=fxC.offsetWidth;fxC.height=fxC.offsetHeight}
+sizeFx(); window.addEventListener('resize',sizeFx);
 
-        document.getElementById('reset-btn').addEventListener('click', () => {
-            if (playerMarker) playerMarker.setMap(null);
-            if (adamMarker) adamMarker.setMap(null);
-            if (blastCircle) blastCircle.setMap(null);
-            playerPos = null; adamPos = null; clickMode = 'player';
-            particles = [];
-            document.getElementById('damage-report').classList.remove('show');
-            if (animationId) cancelAnimationFrame(animationId);
-            setStep(1);
-            showStatus('↺ Reset! Click to place yourself.');
-            setTimeout(hideStatus, 2000);
-        });
+function latLngPx(ll){
+    if(!map) return null;
+    const proj=map.getProjection(); if(!proj) return null;
+    const b=map.getBounds(); if(!b) return null;
+    const ne=b.getNorthEast(),sw=b.getSouthWest();
+    const tr=proj.fromLatLngToPoint(ne),bl=proj.fromLatLngToPoint(sw);
+    const s=Math.pow(2,map.getZoom());
+    const wp=proj.fromLatLngToPoint(new google.maps.LatLng(ll.lat,ll.lng));
+    return{x:(wp.x-bl.x)*s, y:(wp.y-tr.y)*s};
+}
 
-        document.getElementById('dismiss-instructions').addEventListener('click', () => {
-            document.getElementById('instructions').style.display = 'none';
-        });
+function spawnGas(o,count,power){
+    for(let i=0;i<count;i++){
+        const a=Math.random()*Math.PI*2, sp=1+Math.random()*(2+power*.5);
+        particles.push({x:o.x,y:o.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-.5,
+            life:1,decay:.006+Math.random()*.01,size:8+Math.random()*18,
+            hue:70+Math.random()*40,type:'gas'});
+    }
+}
+function spawnFire(o,count){
+    for(let i=0;i<count;i++){
+        const a=Math.random()*Math.PI*2, sp=2+Math.random()*5;
+        particles.push({x:o.x,y:o.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-2,
+            life:1,decay:.015+Math.random()*.015,size:5+Math.random()*10,
+            type:'fire'});
+    }
+}
+function spawnDebris(o,count){
+    for(let i=0;i<count;i++){
+        const a=Math.random()*Math.PI*2, sp=3+Math.random()*9;
+        particles.push({x:o.x,y:o.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-5,
+            life:1,decay:.01+Math.random()*.01,size:3+Math.random()*7,
+            type:'debris',grav:.3,rot:Math.random()*Math.PI,rotV:(Math.random()-.5)*.3,
+            color:['#d4a373','#a0522d','#c0392b','#888','#555'][Math.floor(Math.random()*5)]});
+    }
+}
+function spawnShockRing(o){
+    particles.push({x:o.x,y:o.y,vx:0,vy:0,life:1,decay:.025,size:10,type:'ring',growth:12});
+}
 
-        updateStats();
-    </script>
+let fxRunning=false;
+function runFx(){
+    if(fxRunning) return; fxRunning=true;
+    (function frame(){
+        fxCtx.clearRect(0,0,fxC.width,fxC.height);
+        for(let i=particles.length-1;i>=0;i--){
+            const p=particles[i];
+            p.x+=p.vx; p.y+=p.vy;
+            if(p.grav) p.vy+=p.grav; else if(p.type==='gas') p.vy-=.03;
+            if(p.type!=='ring') p.vx*=.985;
+            p.life-=p.decay;
+            if(p.rot!==undefined) p.rot+=p.rotV;
+            if(p.life<=0){particles.splice(i,1);continue}
 
-    <!-- Load API key from config.js (not tracked by git) -->
-    <script src="config.js"></script>
-    <script>
-        window.gm_authFailure = function() {
-            document.getElementById('map').innerHTML = '<div class="map-msg">⚠️ Google Maps auth failed.<br>Enable the Maps JavaScript API for your key in Google Cloud Console.</div>';
-        };
-        (function() {
-            var mapDiv = document.getElementById('map');
-            if (typeof GOOGLE_MAPS_API_KEY === 'undefined' || GOOGLE_MAPS_API_KEY === 'YOUR_API_KEY_HERE') {
-                mapDiv.innerHTML = '<div class="map-msg">🔑 Copy config.example.js to config.js<br>and add your Google Maps API key.</div>';
-                return;
+            fxCtx.globalAlpha=Math.max(0,p.life);
+            if(p.type==='gas'){
+                const g=fxCtx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.size);
+                g.addColorStop(0,`hsla(${p.hue},65%,50%,0.5)`);
+                g.addColorStop(1,`hsla(${p.hue},65%,40%,0)`);
+                fxCtx.fillStyle=g;fxCtx.beginPath();fxCtx.arc(p.x,p.y,p.size,0,Math.PI*2);fxCtx.fill();
+            } else if(p.type==='fire'){
+                const g=fxCtx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.size);
+                const lum=50+p.life*30;
+                g.addColorStop(0,`hsla(${20+p.life*20},90%,${lum}%,0.7)`);
+                g.addColorStop(1,`hsla(${10},80%,30%,0)`);
+                fxCtx.fillStyle=g;fxCtx.beginPath();fxCtx.arc(p.x,p.y,p.size,0,Math.PI*2);fxCtx.fill();
+            } else if(p.type==='debris'){
+                fxCtx.save();fxCtx.translate(p.x,p.y);fxCtx.rotate(p.rot);
+                fxCtx.fillStyle=p.color;fxCtx.fillRect(-p.size/2,-p.size/2,p.size,p.size);
+                fxCtx.restore();
+            } else if(p.type==='ring'){
+                p.size+=p.growth;
+                fxCtx.strokeStyle=`rgba(255,200,60,${p.life*.6})`;
+                fxCtx.lineWidth=3*p.life;
+                fxCtx.beginPath();fxCtx.arc(p.x,p.y,p.size,0,Math.PI*2);fxCtx.stroke();
             }
-            mapDiv.innerHTML = '<div class="map-msg"><div class="spin"></div>Loading Google Maps...</div>';
-            var s = document.createElement('script');
-            s.src = 'https://maps.googleapis.com/maps/api/js?key=' + GOOGLE_MAPS_API_KEY + '&libraries=geometry&callback=initMap';
-            s.async = true; s.defer = true;
-            s.onerror = function() {
-                mapDiv.innerHTML = '<div class="map-msg">⚠️ Failed to load Google Maps script.<br>Check network/console.</div>';
-            };
-            document.body.appendChild(s);
-        })();
-    </script>
+        }
+        fxCtx.globalAlpha=1;
+        if(particles.length>0) requestAnimationFrame(frame);
+        else{fxCtx.clearRect(0,0,fxC.width,fxC.height);fxRunning=false}
+    })();
+}
+
+// ============================================================
+//  GOOGLE MAPS
+// ============================================================
+function initMap(){
+    map=new google.maps.Map($('map'),{
+        center:{lat:37.7749,lng:-122.4194},zoom:18,mapTypeId:'satellite',tilt:0,
+        disableDefaultUI:false,zoomControl:true,mapTypeControl:true,streetViewControl:false,fullscreenControl:false});
+    if(navigator.geolocation) navigator.geolocation.getCurrentPosition(
+        p=>map.setCenter({lat:p.coords.latitude,lng:p.coords.longitude}),()=>{});
+    map.addListener('click',e=>{
+        const pos={lat:e.latLng.lat(),lng:e.latLng.lng()};
+        if(clickMode==='player'){setPlayer(pos);clickMode='adam';setStep(2);toast("👍 Now click Adam's house!")}
+        else{setAdam(pos);clickMode='player';setStep(3);toast('🎯 Locked! Tune & fire!');setTimeout(hideToast,3e3)}
+    });
+    sizeFx();
+}
+function setPlayer(p){
+    playerPos=p;if(playerMarker)playerMarker.setMap(null);
+    playerMarker=new google.maps.Marker({position:p,map,
+        icon:{path:google.maps.SymbolPath.CIRCLE,fillColor:'#2ecc71',fillOpacity:1,strokeColor:'#fff',strokeWeight:2,scale:12},
+        label:{text:'YOU',className:'marker-label'}});
+}
+function setAdam(p){
+    adamPos=p;if(adamMarker)adamMarker.setMap(null);
+    adamMarker=new google.maps.Marker({position:p,map,
+        icon:{path:google.maps.SymbolPath.CIRCLE,fillColor:'#e74c3c',fillOpacity:1,strokeColor:'#fff',strokeWeight:2,scale:12},
+        label:{text:"ADAM'S",className:'marker-label'}});
+}
+function dist(a,b){return google.maps.geometry.spherical.computeDistanceBetween(
+    new google.maps.LatLng(a.lat,a.lng),new google.maps.LatLng(b.lat,b.lng))}
+
+// ============================================================
+//  STEPS / TOAST
+// ============================================================
+function setStep(n){for(let i=1;i<=3;i++){const c=$('chip-'+i);c.className='sc';if(i<n)c.classList.add('done');if(i===n)c.classList.add('active')}}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show')}
+function hideToast(){$('toast').classList.remove('show')}
+
+// ============================================================
+//  CHARGE / FIRE
+// ============================================================
+let charging=false, chargeStart=0;
+
+function startCharge(){
+    charging=true;chargeStart=Date.now();
+    charState.charging=true;charState.released=false;
+    $('fire-btn').classList.add('charging');
+    (function cf(){
+        if(!charging) return;
+        const h=Math.min((Date.now()-chargeStart)/2000,1);
+        chargeBoost=1+h*1.5;
+        $('charge-arc-fill').style.width=(h*100)+'%';
+        requestAnimationFrame(cf);
+    })();
+}
+function release(){
+    if(!charging) return;
+    charging=false; charState.charging=false; charState.released=true; charState.releaseT=charAnimT;
+    $('fire-btn').classList.remove('charging');
+    $('charge-arc-fill').style.width='0%';
+    fireBlast();
+}
+
+function fireBlast(){
+    if(!playerPos){toast('👇 Place yourself first!');setTimeout(hideToast,2200);chargeBoost=1;return}
+    if(!adamPos){toast("👇 Mark Adam's house!");setTimeout(hideToast,2200);chargeBoost=1;return}
+
+    const{v,vol,dur,di}=vals();
+    const boost=chargeBoost;
+    const R=blastR(v,vol,dur,di)*boost, F=force(v,vol,dur,di)*boost;
+    const D=dist(playerPos,adamPos), Fa=forceAt(F,R,D);
+    const dest=destructionLevel(Fa);
+
+    playFart(v,vol,dur/10,di);
+
+    // Flash
+    const fl=$('flash-overlay'); fl.style.opacity='1'; setTimeout(()=>fl.style.opacity='0',120);
+
+    // Particles
+    const oPx=latLngPx(playerPos);
+    if(oPx){
+        spawnGas(oPx,50+Math.round(vol/2),DIET_MULT[di]);
+        spawnShockRing(oPx);
+        if(di>=4) spawnFire(oPx,20);
+        runFx();
+    }
+    chargeBoost=1;
+    animateBlast(R,F,D,Fa,dest);
+}
+
+function animateBlast(R,F,D,Fa,dest){
+    if(blastCircle)blastCircle.setMap(null);
+    let cur=0;const steps=60,inc=R/steps;let step=0,debrisDone=false;
+    shake(richter(F));
+    (function anim(){
+        step++;cur=Math.min(cur+inc,R);
+        if(blastCircle)blastCircle.setMap(null);
+        const op=Math.max(.08,.45-(step/steps)*.4), hit=cur>=D;
+        blastCircle=new google.maps.Circle({center:playerPos,radius:cur,map,
+            fillColor:hit?'#e74c3c':'#8B4513',fillOpacity:op,
+            strokeColor:'#e94560',strokeWeight:2,strokeOpacity:op+.2});
+        if(hit&&!debrisDone&&dest.pct>20){
+            debrisDone=true;
+            const ap=latLngPx(adamPos);
+            if(ap){spawnDebris(ap,Math.round(dest.pct*.6));if(dest.pct>=75)spawnFire(ap,15);runFx()}
+        }
+        if(step<steps)animId=requestAnimationFrame(anim);
+        else showReport(dest,D,R,Fa,F);
+    })();
+}
+
+function shake(r){
+    const intensity=Math.min(r*3,28), c=$('map-container');
+    let s=0;const mx=36;
+    (function sk(){s++;const d=1-s/mx;
+        c.style.transform=`translate(${(Math.random()-.5)*intensity*d}px,${(Math.random()-.5)*intensity*d}px)`;
+        if(s<mx)requestAnimationFrame(sk);else c.style.transform=''}
+    )();
+}
+
+// ============================================================
+//  HOUSE DESTRUCTION (canvas-drawn)
+// ============================================================
+function drawHouseCanvas(pct){
+    const cv=$('house-canvas'), ctx=cv.getContext('2d');
+    cv.width=cv.offsetWidth*2;cv.height=cv.offsetHeight*2;ctx.scale(2,2);
+    const W=cv.width/2,H=cv.height/2;
+    const intact=100-pct;
+
+    // Ground
+    ctx.fillStyle='#2a2a1e';ctx.fillRect(0,H-12,W,12);
+    // Grass
+    ctx.fillStyle='#3a5a2a';ctx.fillRect(0,H-14,W,4);
+
+    const hx=W/2, hy=H-14;
+    ctx.save();ctx.translate(hx,hy);
+
+    if(intact>5){
+        const lean=(pct/100)*6;
+        ctx.rotate(lean*.003);
+
+        const wallW=70, wallH=Math.max(20,50*(intact/100)+10), roofH=25;
+        // Wall
+        ctx.fillStyle='#d4a373';
+        ctx.fillRect(-wallW/2,-wallH,wallW,wallH);
+        // Wall shading
+        ctx.fillStyle='rgba(0,0,0,0.08)';
+        ctx.fillRect(wallW/4,-wallH,wallW/4,wallH);
+
+        // Roof
+        if(pct<70){
+            ctx.fillStyle='#8B4513';
+            ctx.beginPath();ctx.moveTo(-wallW/2-8,-wallH);ctx.lineTo(0,-wallH-roofH);ctx.lineTo(wallW/2+8,-wallH);ctx.closePath();ctx.fill();
+            ctx.fillStyle='#a0522d';
+            ctx.beginPath();ctx.moveTo(0,-wallH-roofH);ctx.lineTo(wallW/2+8,-wallH);ctx.lineTo(0,-wallH);ctx.closePath();ctx.fill();
+        }
+
+        // Door
+        ctx.fillStyle='#6b4226';
+        const doorH=Math.min(20,wallH-4);
+        ctx.beginPath();
+        ctx.moveTo(-6,0);ctx.lineTo(-6,-doorH);ctx.arc(0,-doorH,6,Math.PI,0);ctx.lineTo(6,0);ctx.closePath();ctx.fill();
+        ctx.fillStyle='#ffcc00';ctx.beginPath();ctx.arc(3,-doorH/2,1.5,0,Math.PI*2);ctx.fill();
+
+        // Windows
+        if(pct<50){
+            [[-22,-wallH+12],[18,-wallH+12]].forEach(([wx,wy])=>{
+                ctx.fillStyle='#aaccff';ctx.fillRect(wx,wy,12,12);
+                ctx.strokeStyle='#8B6914';ctx.lineWidth=1;ctx.strokeRect(wx,wy,12,12);
+                ctx.beginPath();ctx.moveTo(wx+6,wy);ctx.lineTo(wx+6,wy+12);ctx.stroke();
+                ctx.beginPath();ctx.moveTo(wx,wy+6);ctx.lineTo(wx+12,wy+6);ctx.stroke();
+            });
+        } else if(pct<70) {
+            ctx.fillStyle='#556';ctx.fillRect(-22,-wallH+12,12,12);
+            ctx.fillStyle='rgba(255,200,0,0.3)';ctx.fillRect(18,-wallH+12,12,12);
+        }
+
+        // Cracks
+        if(pct>25){
+            ctx.strokeStyle='rgba(40,30,20,0.7)';ctx.lineWidth=1.5;ctx.lineCap='round';
+            ctx.beginPath();ctx.moveTo(5,-wallH);ctx.lineTo(8,-wallH+15);ctx.lineTo(3,-wallH+28);ctx.stroke();
+            if(pct>50){ctx.beginPath();ctx.moveTo(-15,-wallH+5);ctx.lineTo(-10,-wallH+20);ctx.stroke();}
+        }
+
+        // Chimney
+        if(pct<40){
+            ctx.fillStyle='#8B4513';ctx.fillRect(20,-wallH-roofH-8,8,roofH-5);
+        }
+    }
+
+    // Rubble (seeded from pct so it's deterministic)
+    if(pct>25){
+        let seed=42;
+        const rng=()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646};
+        const n=Math.round(pct/8);
+        for(let i=0;i<n;i++){
+            const rx=-50+rng()*100, ry=-rng()*8, rs=3+rng()*7;
+            ctx.fillStyle=['#d4a373','#a0522d','#8B4513','#888','#666'][i%5];
+            ctx.save();ctx.translate(rx,ry);ctx.rotate(rng()*Math.PI/3);
+            ctx.fillRect(-rs/2,-rs/2,rs,rs);ctx.restore();
+        }
+    }
+
+    // Smoke
+    if(pct>=75){
+        const st=Date.now()/1000;
+        ctx.globalAlpha=.35;
+        [[0,-60,16],[15,-50,12],[-12,-55,14],[8,-70,10]].forEach(([sx,sy,sr],i)=>{
+            ctx.fillStyle='rgba(100,100,100,0.5)';
+            ctx.beginPath();ctx.arc(sx+Math.sin(st+i)*4,sy-Math.abs(Math.sin(st*.7+i))*5,sr,0,Math.PI*2);ctx.fill();
+        });
+        ctx.globalAlpha=1;
+    }
+
+    // Fire
+    if(pct>=90){
+        const st=Date.now()/1000;
+        ctx.globalAlpha=.7;
+        [[-10,-20],[5,-25],[0,-15]].forEach(([fx,fy],i)=>{
+            const g=ctx.createRadialGradient(fx,fy,0,fx,fy,10+Math.sin(st*5+i)*3);
+            g.addColorStop(0,'rgba(255,200,50,0.8)');g.addColorStop(.5,'rgba(255,100,20,0.5)');g.addColorStop(1,'rgba(255,50,10,0)');
+            ctx.fillStyle=g;ctx.beginPath();ctx.arc(fx+Math.sin(st*4+i)*3,fy,10+Math.sin(st*5+i)*3,0,Math.PI*2);ctx.fill();
+        });
+        ctx.globalAlpha=1;
+    }
+
+    ctx.restore();
+}
+
+function showReport(dest,D,R,Fa,F){
+    $('report-title').innerHTML=`${dest.emoji} ${dest.level} ${dest.emoji}`;
+    $('report-title').style.color=dest.color;
+    drawHouseCanvas(dest.pct);
+
+    const pctReach=Math.min(100,(R/D*100)).toFixed(0);
+    const integrity=Math.max(0,100-dest.pct);
+    let quip='';
+    if(dest.level==='OBLITERATED') quip="Adam's house has been vaporized. He needs new friends AND a new house.";
+    else if(dest.level==='DESTROYED') quip="Adam's house is flattened. Insurance won't cover this.";
+    else if(dest.level==='NO EFFECT') quip="Adam didn't even notice. Eat more beans.";
+    else quip="Adam felt that one. Keep tuning!";
+
+    $('report-text').innerHTML=`
+        <b>Distance:</b> ${D.toFixed(1)} m<br>
+        <b>Blast radius:</b> ${R.toFixed(1)} m (${pctReach}%)<br>
+        <b>Force at origin:</b> ${F.toLocaleString(undefined,{maximumFractionDigits:0})} N<br>
+        <b>Force at Adam's:</b> ${Fa.toLocaleString(undefined,{maximumFractionDigits:0})} N
+        <div style="margin-top:8px"><b>House Integrity:</b>
+        <div class="rbar-track"><div class="rbar-fill" id="integrity-bar"></div></div></div>
+        <i style="color:${dest.color}">${quip}</i>`;
+
+    $('damage-report').classList.add('show');
+    setTimeout(()=>{
+        const bar=$('integrity-bar');if(!bar)return;
+        bar.style.width=integrity+'%';
+        bar.style.background=integrity>60?'linear-gradient(90deg,#27ae60,#2ecc71)':
+            integrity>25?'linear-gradient(90deg,#e67e22,#f1c40f)':'linear-gradient(90deg,#8e44ad,#e74c3c)';
+    },80);
+}
+
+// ============================================================
+//  SOUND (varies per diet)
+// ============================================================
+function playFart(velocity,volume,dur,di){
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    const d=Math.min(dur,5);
+    // Base pitch and timbre shift by diet
+    const basePitch=[80,60,50,40,30][di];
+    const types=['sine','sawtooth','sawtooth','square','square'][di];
+
+    const osc1=ctx.createOscillator();osc1.type=types;
+    osc1.frequency.setValueAtTime(basePitch+di*10,ctx.currentTime);
+    osc1.frequency.exponentialRampToValueAtTime(Math.max(20,basePitch*.4+velocity*.15),ctx.currentTime+d);
+
+    const osc2=ctx.createOscillator();osc2.type='sine';
+    osc2.frequency.setValueAtTime(basePitch*.6,ctx.currentTime);
+    osc2.frequency.exponentialRampToValueAtTime(18,ctx.currentTime+d);
+
+    // Sub-bass rumble for heavy diets
+    const osc3=ctx.createOscillator();osc3.type='sine';
+    osc3.frequency.value=20+di*5;
+
+    const nb=ctx.createBuffer(1,ctx.sampleRate*d,ctx.sampleRate);
+    const nd=nb.getChannelData(0);
+    for(let i=0;i<nd.length;i++) nd[i]=(Math.random()*2-1)*(0.15+di*0.05);
+    const noise=ctx.createBufferSource();noise.buffer=nb;
+
+    const lfo=ctx.createOscillator();lfo.frequency.value=6+velocity*.04+di*2;
+    const lfoG=ctx.createGain();lfoG.gain.value=15+volume*.25+di*8;
+    lfo.connect(lfoG);lfoG.connect(osc1.frequency);
+
+    // Distortion for nuclear curry
+    let distNode=null;
+    if(di>=3){
+        distNode=ctx.createWaveShaper();
+        const curve=new Float32Array(256);
+        for(let i=0;i<256;i++){const x=i*2/256-1;curve[i]=Math.tanh(x*(2+di));}
+        distNode.curve=curve;
+    }
+
+    const filter=ctx.createBiquadFilter();filter.type='lowpass';
+    filter.frequency.value=150+velocity*2+di*30;filter.Q.value=4+di;
+
+    const gain=ctx.createGain();
+    const mv=Math.min(.6,volume/200*.6);
+    gain.gain.setValueAtTime(mv,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.01,ctx.currentTime+d);
+
+    osc1.connect(filter);osc2.connect(filter);osc3.connect(filter);noise.connect(filter);
+    if(distNode){filter.connect(distNode);distNode.connect(gain)}else filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    [osc1,osc2,osc3,noise,lfo].forEach(n=>{n.start();n.stop(ctx.currentTime+d)});
+    setTimeout(()=>ctx.close(),(d+1)*1e3);
+}
+
+// ============================================================
+//  EVENT LISTENERS
+// ============================================================
+['velocity','volume','duration'].forEach(id=>$(id).addEventListener('input',updateStats));
+document.querySelectorAll('.dp').forEach(p=>p.addEventListener('click',()=>{
+    document.querySelectorAll('.dp').forEach(x=>x.classList.remove('active'));
+    p.classList.add('active');dietIdx=+p.dataset.diet;updateStats();
+}));
+
+const fb=$('fire-btn');
+fb.addEventListener('mousedown',startCharge);
+fb.addEventListener('mouseup',release);
+fb.addEventListener('mouseleave',()=>{if(charging)release()});
+fb.addEventListener('touchstart',e=>{e.preventDefault();startCharge()});
+fb.addEventListener('touchend',e=>{e.preventDefault();release()});
+
+$('close-report').addEventListener('click',()=>$('damage-report').classList.remove('show'));
+$('reset-btn').addEventListener('click',()=>{
+    if(playerMarker)playerMarker.setMap(null);if(adamMarker)adamMarker.setMap(null);
+    if(blastCircle)blastCircle.setMap(null);
+    playerPos=adamPos=null;clickMode='player';particles=[];
+    $('damage-report').classList.remove('show');
+    if(animId)cancelAnimationFrame(animId);
+    setStep(1);toast('↺ Reset!');setTimeout(hideToast,2e3);
+});
+$('dismiss-btn').addEventListener('click',()=>$('instructions').style.display='none');
+updateStats();
+</script>
+
+<script src="config.js"></script>
+<script>
+window.gm_authFailure=function(){$('map').innerHTML='<div class="map-msg">⚠️ Maps auth failed.<br>Enable Maps JavaScript API for your key.</div>'};
+(function(){
+    var m=document.getElementById('map');
+    if(typeof GOOGLE_MAPS_API_KEY==='undefined'||GOOGLE_MAPS_API_KEY==='YOUR_API_KEY_HERE'){
+        m.innerHTML='<div class="map-msg">🔑 Copy config.example.js to config.js<br>and add your Google Maps API key.</div>';return;}
+    m.innerHTML='<div class="map-msg"><div class="spin"></div>Loading Google Maps...</div>';
+    var s=document.createElement('script');
+    s.src='https://maps.googleapis.com/maps/api/js?key='+GOOGLE_MAPS_API_KEY+'&libraries=geometry&callback=initMap';
+    s.async=true;s.defer=true;
+    s.onerror=function(){m.innerHTML='<div class="map-msg">⚠️ Failed to load Maps.<br>Check network/console.</div>'};
+    document.body.appendChild(s);
+})();
+</script>
 </body>
 </html>
